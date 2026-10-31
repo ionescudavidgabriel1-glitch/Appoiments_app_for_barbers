@@ -368,6 +368,102 @@ body {
   }
 }
 
+/* Booking choices: radio buttons styled as cards and chips.
+   The radio stays in the page (for keyboards and screen readers), just invisible. */
+
+.choice {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.choice input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.choice-card {
+  display: block;
+  height: 100%;
+  border-radius: 1rem;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  padding: 0.85rem 1rem;
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.choice:hover .choice-card {
+  border-color: var(--brass);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px -12px rgb(58 42 34 / 0.45);
+}
+
+.choice input:checked + .choice-card {
+  border-color: var(--oxblood);
+  background: rgb(122 31 43 / 0.04);
+  box-shadow: 0 0 0 3px rgb(122 31 43 / 0.15);
+}
+
+.choice input:focus-visible + .choice-card,
+.choice input:focus-visible + .slot {
+  outline: 3px solid var(--brass);
+  outline-offset: 3px;
+}
+
+.choice input:disabled + .choice-card {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+  box-shadow: none;
+  border-color: var(--line);
+}
+
+.choice:has(input:disabled) {
+  cursor: not-allowed;
+}
+
+/* Day strip: scrolls sideways on small screens. */
+.day-strip {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.25rem 0.25rem 0.75rem;
+  margin: 0 -0.25rem;
+  scroll-snap-type: x proximity;
+}
+
+.day-strip .choice {
+  flex: 0 0 4.5rem;
+  scroll-snap-align: start;
+}
+
+.day-strip .choice-card {
+  padding: 0.6rem 0.25rem;
+  text-align: center;
+}
+
+/* Time chips reuse .slot-free; the picked one turns walnut like the demo. */
+.choice input:checked + .slot-free {
+  background: var(--walnut);
+  color: #fff;
+  transform: scale(1.03);
+}
+
+/* Many chips: a quick cascade, so the last ones don't arrive seconds late. */
+.slot-chip {
+  animation-delay: calc(0.05s + min(var(--i, 0), 12) * 0.03s);
+  justify-content: center;
+  font-family: "Big Shoulders Display", sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% from "_form.html" import field %}
+
+{% block title %}Book at {{ shop.name }}{% endblock %}
+
+{% block head_scripts %}
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+{% endblock %}
+
+{# Guests don't need the owner/barber login links. #}
+{% block nav %}{% endblock %}
+
+{% macro step_title(n, text) %}
+  <h2 class="flex items-baseline gap-3 font-display text-3xl font-extrabold">
+    <span class="text-brass">{{ n }}</span>{{ text }}
+  </h2>
+{% endmacro %}
+
+{% block content %}
+<div class="page-enter">
+  <div>
+    <h1 class="font-display text-5xl font-extrabold sm:text-6xl">Book at {{ shop.name }}</h1>
+    {% if shop.address or shop.phone %}
+      <p class="mt-2 text-taupe">
+        {{ shop.address or "" }}{% if shop.address and shop.phone %}<br class="sm:hidden"><span class="hidden sm:inline">, </span>{% endif %}
+        {% if shop.phone %}<a href="tel:{{ shop.phone }}" class="underline decoration-line decoration-2 underline-offset-4 hover:decoration-brass">{{ shop.phone }}</a>{% endif %}
+      </p>
+    {% endif %}
+  </div>
+
+  {% if not c.services or not c.members %}
+    <div class="mt-10 max-w-xl rounded-3xl border-2 border-dashed border-mint-deep/30 bg-mint/30 p-6">
+      <p class="text-lg font-semibold text-mint-deep">Online booking isn't open yet</p>
+      <p class="mt-1 text-taupe">{{ shop.name }} is still setting up. {% if shop.phone %}Call {{ shop.phone }} to book.{% else %}Please check back soon.{% endif %}</p>
+    </div>
+  {% else %}
+  <form method="post" action="{{ url_for('booking.submit', slug=shop.slug) }}" novalidate
+        hx-get="{{ url_for('booking.book', slug=shop.slug) }}"
+        hx-trigger="change[target.matches('[data-refresh]')]"
+        hx-params="service,barber,day,start"
+        hx-target="#steps" hx-select="#steps" hx-swap="outerHTML"
+        hx-push-url="true">
+    {{ form.hidden_tag() }}
+    <div id="steps" class="mt-10 space-y-12">
+
+      {# 1. Service #}
+      <section>
+        {{ step_title(1, "Choose a service") }}
+        <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {% for service in c.services %}
+            <label class="choice">
+              <input type="radio" name="service" value="{{ service.id }}" data-refresh
+                     {% if c.service and c.service.id == service.id %}checked{% endif %}>
+              <span class="choice-card">
+                <span class="block text-lg font-semibold">{{ service.name }}</span>
+                <span class="mt-0.5 block text-taupe">{{ service.duration_min }} min · {{ service.price_cents | money(shop.currency) }}</span>
+              </span>
+            </label>
+          {% endfor %}
+        </div>
+      </section>
+
+      {# 2. Barber #}
+      {% if c.service %}
+        <section {% if not c.barber %}data-focus{% endif %}>
+          {{ step_title(2, "Choose a barber") }}
+          <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label class="choice">
+              <input type="radio" name="barber" value="{{ any }}" data-refresh {% if c.barber == any %}checked{% endif %}>
+              <span class="choice-card">
+                <span class="block text-lg font-semibold">Any barber</span>
+                <span class="mt-0.5 block text-taupe">See every free time</span>
+              </span>
+            </label>
+            {% for member in c.members %}
+              <label class="choice">
+                <input type="radio" name="barber" value="{{ member.id }}" data-refresh
+                       {% if c.barber is not string and c.barber and c.barber.id == member.id %}checked{% endif %}>
+                <span class="choice-card">
+                  <span class="block text-lg font-semibold">{{ member.display_name }}</span>
+                  <span class="mt-0.5 block text-taupe">Barber</span>
+                </span>
+              </label>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      {# 3. Day and time #}
+      {% if c.barber %}
+        <section {% if not c.start %}data-focus{% endif %}>
+          {{ step_title(3, "Pick a day and time") }}
+          {% if not c.day %}
+            <p class="mt-4 max-w-xl text-taupe">No free times in the next {{ c.days | length }} days. Try another barber or service{% if shop.phone %}, or call {{ shop.phone }}{% endif %}.</p>
+          {% else %}
+            <div class="day-strip mt-4" role="radiogroup" aria-label="Day">
+              {% for day, has_free in c.days.items() %}
+                <label class="choice">
+                  <input type="radio" name="day" value="{{ day.isoformat() }}" data-refresh
+                         {% if day == c.day %}checked{% endif %} {% if not has_free %}disabled{% endif %}>
+                  <span class="choice-card">
+                    <span class="block text-xs font-semibold text-taupe">{{ day.strftime("%a") }}</span>
+                    <span class="block font-display text-2xl font-extrabold leading-tight">{{ day.day }}</span>
+                    <span class="block text-xs text-taupe">{{ day.strftime("%b") }}</span>
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+
+            <div class="ledger mt-4">
+              <p class="pb-3 font-display text-xl font-bold">
+                {{ c.day.strftime("%A") }} {{ c.day.day }} {{ c.day.strftime("%B") }}
+                <span class="font-sans text-sm font-normal text-taupe">· {{ c.slots | length }} free {{ "time" if c.slots | length == 1 else "times" }}</span>
+              </p>
+              {% for label, times in c.slot_groups %}
+                  <div class="ledger-row !grid-cols-1 gap-2 py-3 sm:!grid-cols-[6.5rem_1fr]">
+                    <span class="ledger-time pt-2">{{ label }}</span>
+                    <div class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+                      {% for t in times %}
+                        <label class="choice">
+                          <input type="radio" name="start" value="{{ t.strftime('%H:%M') }}"
+                                 data-book-label="Book {{ t.strftime('%H:%M') }}{% if c.barber is not string %} with {{ c.barber.display_name }}{% endif %}"
+                                 {% if c.start == t %}checked{% endif %}>
+                          <span class="slot slot-free slot-chip" style="--i: {{ loop.index0 }}">{{ t.strftime("%H:%M") }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </section>
+      {% endif %}
+
+      {# 4. Details #}
+      {% if c.day %}
+        <section {% if c.start %}data-focus{% endif %} class="max-w-xl">
+          {{ step_title(4, "Your details") }}
+          <div class="mt-4 rounded-3xl border border-line bg-white p-6 sm:p-8">
+            {{ field(form.guest_name, autocomplete="name") }}
+            {{ field(form.guest_email, autocomplete="email") }}
+            {{ field(form.guest_phone, autocomplete="tel", type="tel") }}
+            <button type="submit" class="btn btn-primary w-full text-lg" data-book-button data-loading-text="Booking…">
+              {% if c.start %}Book {{ c.start.strftime("%H:%M") }}{% if c.barber is not string %} with {{ c.barber.display_name }}{% endif %}{% else %}Pick a time above{% endif %}
+            </button>
+            <p class="mt-3 text-center text-sm text-taupe">No account needed. You'll get a private link to your booking.</p>
+          </div>
+        </section>
+      {% endif %}
+    </div>
+
+    <noscript>
+      <button type="submit" formmethod="get" formaction="{{ url_for('booking.book', slug=shop.slug) }}" class="btn btn-quiet mt-8">Show times</button>
+    </noscript>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

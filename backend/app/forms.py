@@ -208,3 +208,37 @@ class DayHoursForm(Form):
 class WorkingHoursForm(FlaskForm):
     # One entry per weekday, Monday first, matching datetime.weekday().
     days = FieldList(FormField(DayHoursForm), min_entries=7, max_entries=7)
+
+
+# Booking (phase 4)
+
+
+class BookingDetailsForm(FlaskForm):
+    """The guest's contact details. The chosen service, barber and time come from
+    the same form's radio buttons and are checked by the booking view."""
+
+    guest_name = StringField(
+        "Your name",
+        filters=[strip],
+        validators=[
+            DataRequired("Enter your name."),
+            Length(max=120, message="Keep it under 120 characters."),
+        ],
+    )
+    guest_email = EmailField(
+        "Email",
+        filters=[strip],
+        description="We'll use it for your confirmation.",
+        validators=[DataRequired("Enter your email."), Email(VALID_EMAIL), Length(max=255)],
+    )
+    guest_phone = StringField(
+        "Phone",
+        filters=[strip],
+        description="In case the shop needs to reach you.",
+        validators=[
+            DataRequired("Enter your phone number."),
+            Regexp(
+                r"^\+?[0-9 ()./-]{7,20}$", message="Enter a phone number, like +40 712 345 678."
+            ),
+        ],
+    )

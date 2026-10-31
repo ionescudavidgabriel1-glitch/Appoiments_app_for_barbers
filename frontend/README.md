@@ -18,6 +18,8 @@ frontend/
     shops/overview.html  a shop's services, barbers and invites
     shops/service_form.html add or edit a service
     shops/hours.html     a barber's weekly working hours
+    booking/book.html    public booking page (service, barber, day and time, details)
+    booking/confirmation.html the guest's booking page
   static/
     css/app.css      design tokens and components (buttons, inputs, ledger, animations)
     js/app.js        small interactions (see "Interactions")
@@ -38,6 +40,8 @@ Templates are grouped in folders named after their blueprint (`main/`, `auth/`, 
 | Shop overview | `/shops/<slug>/` | `shops/overview.html` |
 | Add or edit a service | `/shops/<slug>/services/...` | `shops/service_form.html` |
 | Working hours | `/shops/<slug>/barbers/<id>/hours` | `shops/hours.html` |
+| Book (public) | `/s/<slug>/` | `booking/book.html` |
+| Guest's booking | `/s/<slug>/booking/<token>` | `booking/confirmation.html` |
 | Accept an invite | `/auth/invite/<token>` | `auth/invite_signup.html`, `auth/invite_join.html`, `auth/invite_invalid.html` |
 
 ## Forms
@@ -81,7 +85,8 @@ Fonts: Big Shoulders Display for headings (`font-display`), Figtree for everythi
 Components in `app.css`:
 - `.btn` with `.btn-primary` (oxblood, barber-pole stripes on hover), `.btn-quiet` (white, outlined), and `.btn-link` for header links. Buttons lift on hover and squish on press.
 - `.input` for text fields, with a brass focus ring.
-- `.ledger`, `.ledger-row`, `.ledger-time` and `.slot` (`.slot-free`, `.slot-booked`) for the appointment book. Phases 4 and 5 reuse these for slot picking and the daily calendar.
+- `.ledger`, `.ledger-row`, `.ledger-time` and `.slot` (`.slot-free`, `.slot-booked`) for the appointment book, used for slot picking and (phase 5) the daily calendar.
+- `.choice` wraps a hidden radio with a `.choice-card` (or a `.slot` chip) so radios look like cards; `.day-strip` is the sideways-scrolling day picker.
 - `.page-enter` on a wrapper makes its children rise in once on load.
 - `.pole` is the logo's turning barber pole.
 
@@ -97,6 +102,7 @@ All animation stops for visitors who set "reduce motion" on their device.
 - The home page demo lets visitors book and free sample slots.
 - `data-copy="input-id"` on a button copies that input's value (the invite link).
 - On the working hours page, "Copy Monday to Tuesday–Friday" fills in the weekdays.
+- On the booking page, the Book button names the picked time, and after HTMX swaps in the next step it scrolls into view (`data-focus`).
 
 ## Page checks
 
@@ -104,4 +110,6 @@ Playwright is in `requirements-dev.txt`. After `python -m playwright install chr
 
 ## Styling
 
-Tailwind CSS currently loads from the Play CDN in `base.html`, with the colors and fonts above registered in `tailwind.config`. The CDN is for development only. Replace it with a stylesheet built by the Tailwind CLI before deploying (phase 7). HTMX will be added in phase 4 for slot selection.
+Tailwind CSS currently loads from the Play CDN in `base.html`, with the colors and fonts above registered in `tailwind.config`. The CDN is for development only. Replace it with a stylesheet built by the Tailwind CLI before deploying (phase 7). HTMX (2.0.4, from unpkg) is loaded only on the booking page through the `head_scripts` block. The booking form has `hx-get` on itself: changing a radio marked `data-refresh` reloads the page with the choices in the URL and swaps only `#steps`. Without JavaScript, a "Show times" button does the same with a normal page load.
+
+Public pages for guests override the `nav` block to hide the owner and barber login links.

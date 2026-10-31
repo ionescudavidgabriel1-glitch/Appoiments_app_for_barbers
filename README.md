@@ -61,4 +61,4 @@ Each build phase is released as a version (`v0.1.0` for phase 1, and so on) and 
 
 ## Status
 
-Phase 3 (catalog) is done: owners create shops, manage services, invite barbers and set working hours. Next is phase 4 (booking).
+Phase 4 (booking) is done: guests book a service, barber and free time on the shop's page, with no double bookings. Next is phase 5 (management).

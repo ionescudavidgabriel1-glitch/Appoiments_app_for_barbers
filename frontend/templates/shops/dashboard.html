@@ -22,7 +22,7 @@
               <span class="ledger-time">{{ loop.index }}</span>
               <div class="flex flex-wrap items-baseline justify-between gap-2 py-2">
                 <a href="{{ url_for('shops.overview', slug=shop.slug) }}" class="text-lg font-semibold underline decoration-line decoration-2 underline-offset-4 hover:decoration-brass">{{ shop.name }}</a>
-                <span class="text-sm text-taupe">Booking page: /s/{{ shop.slug }}</span>
+                <span class="text-sm text-taupe">Booking page: <a href="{{ url_for('booking.book', slug=shop.slug) }}" target="_blank" rel="noopener" class="font-semibold text-walnut underline decoration-line decoration-2 underline-offset-4 hover:decoration-brass">/s/{{ shop.slug }}</a></span>
               </div>
             </li>
           {% endfor %}

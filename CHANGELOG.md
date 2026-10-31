@@ -2,6 +2,16 @@
 
 Each build phase is released as one version. See "Versioning" in `CLAUDE.md`.
 
+## v0.4.0 - Phase 4: Booking (2026-10-31)
+
+- Public booking page at `/s/<shop-address>`: choose a service, a barber or "Any barber", a day and a free time, then enter name, email and phone. No account needed.
+- Choices update in place with HTMX; the page still works without JavaScript.
+- Booking rules in `app/booking.py`: times on the shop's grid, inside working hours, long enough for the service, in the future, within 30 days, and not overlapping other bookings or time off. Shop timezone and daylight saving handled.
+- Double bookings prevented by re-checking inside the transaction (with a row lock on PostgreSQL) and the unique index; a guest who loses a race is asked to pick another time.
+- Confirmation page with a private link to the booking (stored only as a hash).
+- Owner pages link to the shop's booking page.
+- Tests for the booking rules, double bookings, validation and the booking pages.
+
 ## v0.3.0 - Phase 3: Catalog (2026-10-31)
 
 - Owners create shops: name, booking page address (made from the name if left empty), address, phone, timezone, currency and booking time grid; editable in shop settings.

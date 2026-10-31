@@ -84,3 +84,18 @@ document.querySelectorAll("[data-copy-monday]").forEach((button) => {
     button.textContent = "Copied to Tuesday–Friday";
   });
 });
+
+// Booking page: name the chosen time on the Book button, and after HTMX
+// swaps in the next step, scroll it into view.
+document.addEventListener("change", (event) => {
+  const label = event.target.dataset?.bookLabel;
+  const button = document.querySelector("[data-book-button]");
+  if (label && button) button.textContent = label;
+});
+
+document.addEventListener("htmx:afterSwap", () => {
+  const next = document.querySelector("[data-focus]");
+  if (!next) return;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  next.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+});

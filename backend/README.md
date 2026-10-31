@@ -13,6 +13,7 @@ backend/
     extensions.py    db, migrate, login_manager, csrf
     forms.py         Flask-WTF forms (accounts, shop, service, working hours)
     catalog.py       shop and service rules: slugs, prices in cents, saving working hours
+    booking.py       booking rules: free start times, creating a booking safely
     decorators.py    role_required: limits a view to certain roles
     security.py      tokens for invite and booking links (stored as SHA-256 hashes)
     timeutils.py     UTC helpers and shop-timezone conversion
@@ -31,7 +32,7 @@ backend/
 | `auth` | `/auth` | `GET, POST /signup`, `GET, POST /login`, `POST /logout`, `GET, POST /invite/<token>` |
 | `shops` | `/shops` | dashboard and shop management, see below |
 | `admin` | `/admin` | empty |
-| `booking` | `/s` | empty, phase 4 (public pages at `/s/<shop-slug>`) |
+| `booking` | `/s` | public booking pages, see below |
 
 ### Shop management (`/shops`)
 
@@ -51,6 +52,27 @@ All pages need a login. Pages for a shop are owner-only; anyone else gets 404, s
 | POST | `/shops/<slug>/barbers/add-me` | Add the owner as a barber | shop owner |
 | POST | `/shops/<slug>/barbers/<id>/toggle` | Hide or show a barber | shop owner |
 | GET, POST | `/shops/<slug>/barbers/<id>/hours` | Weekly working hours | shop owner, or that barber |
+
+### Public booking (`/s`)
+
+No login. Guests never have accounts.
+
+| Method | Path | What it does |
+| --- | --- | --- |
+| GET | `/s/<slug>/` | Booking page. Choices travel in the query string: `?service=<id>&barber=<id or any>&day=YYYY-MM-DD&start=HH:MM` |
+| POST | `/s/<slug>/` | Book: the same choices plus `guest_name`, `guest_email`, `guest_phone` |
+| GET | `/s/<slug>/booking/<token>` | The guest's private booking page (`?new=1` right after booking shows the link to keep) |
+
+## Booking rules (`app/booking.py`)
+
+- A start time is offered when it is on the shop's grid (every `slot_minutes` from midnight), the whole service fits inside one working shift, it is in the future, and it overlaps no blocking appointment or time off.
+- Blocking appointments: `confirmed`, and `pending_payment` whose hold hasn't expired. Cancelled ones free the time.
+- Customers can book from today up to `BOOKING_DAYS_AHEAD` (30) days ahead, counted in the shop's timezone.
+- Times are chosen in the shop's local time and stored in UTC, so daylight saving changes are handled.
+- "Any barber" offers every time at least one barber is free, and books the first free barber in name order.
+- `create_booking` checks availability again inside the transaction, locking the barber's row on PostgreSQL, so two guests can't book overlapping times. The unique index on (barber, start) is the last line of defense. If the time is gone it raises `SlotTaken`, and the guest is sent back to pick again.
+- The manage link's token is stored only as a SHA-256 hash; the link is shown once after booking.
+- Deposits are not charged yet: every booking is `confirmed`.
 
 ## Catalog rules
 

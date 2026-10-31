@@ -10,7 +10,7 @@
       <a href="{{ url_for('shops.dashboard') }}" class="btn-link -ml-2 text-sm text-taupe">Dashboard</a>
       <h1 class="mt-2 font-display text-5xl font-extrabold">{{ shop.name }}</h1>
       <p class="mt-1 text-taupe">
-        Booking page: <span class="font-semibold text-walnut">/s/{{ shop.slug }}</span>
+        Booking page: <a href="{{ url_for('booking.book', slug=shop.slug) }}" target="_blank" rel="noopener" class="font-semibold text-walnut underline decoration-line decoration-2 underline-offset-4 hover:decoration-brass">/s/{{ shop.slug }}</a>
         {% if shop.address %}<span class="block sm:inline sm:before:content-['_·_']">{{ shop.address }}</span>{% endif %}
       </p>
     </div>
