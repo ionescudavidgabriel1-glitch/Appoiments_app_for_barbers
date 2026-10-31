@@ -2,6 +2,17 @@
 
 Each build phase is released as one version. See "Versioning" in `CLAUDE.md`.
 
+## v0.6.0 - Phase 6: Notifications (2026-10-31)
+
+- Emails to guests: booking confirmation with the private link, moved, cancelled, and reminders 24 hours and 2 hours before.
+- Emails to the barber: new booking, moved (including to or from another barber) and cancelled, except for changes they made themselves. Owners get no emails.
+- Emails in the shop's language, Romanian or English, set automatically from the shop's timezone and changeable in shop settings. Flask-Babel is set up for the later interface translation.
+- One warm HTML email layout with a plain-text version.
+- Development saves emails as files in `backend/instance/outbox/`; production sends over SMTP (settings in `.env`). A failed email never blocks a booking.
+- Reminders run in a separate process: `flask reminders-worker` (every 5 minutes) or `flask send-reminders` (once). Each reminder is sent only once, even with two workers.
+- Booking links in later emails are rebuilt from a per-booking nonce and the secret key; the database still stores only their hash.
+- Migration: `shops.language`, reminder timestamps and `appointments.manage_nonce`. Existing shops in Romania switch to Romanian.
+
 ## v0.5.0 - Phase 5: Management (2026-10-31)
 
 - Daily calendar at `/shops/<shop>/calendar`: each barber's hours, time off and bookings, with previous/next day and a date picker. Owners see the whole shop; barbers see their own bookings.

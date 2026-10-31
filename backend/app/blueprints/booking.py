@@ -26,6 +26,7 @@ from ..booking import (
 from ..extensions import db
 from ..forms import BookingDetailsForm
 from ..models import Appointment, Shop
+from ..notifications import notify_booked, notify_cancelled, notify_moved
 from ..security import hash_token
 from ..timeutils import to_local, utcnow
 
@@ -174,6 +175,7 @@ def submit(slug):
             )
         )
 
+    notify_booked(appointment)
     return redirect(url_for("booking.confirmation", slug=shop.slug, token=token, new=1))
 
 
@@ -215,6 +217,7 @@ def guest_cancel(slug, token):
     appointment = guest_appointment_or_404(shop, token)
     try:
         cancel_booking(appointment, utcnow())
+        notify_cancelled(appointment)
         flash("Your booking is cancelled. The time is free for someone else.", "success")
     except CannotChange:
         flash("This booking can't be cancelled online any more.", "error")
@@ -239,7 +242,9 @@ def guest_reschedule(slug, token):
             flash("Pick a new time first.", "error")
         else:
             try:
+                old_member = a.member
                 reschedule_booking(a, c["candidates"], c["day"], c["start"], utcnow())
+                notify_moved(a, old_member)
                 flash("Your booking has moved. See you then!", "success")
                 return redirect(back)
             except (SlotTaken, CannotChange):

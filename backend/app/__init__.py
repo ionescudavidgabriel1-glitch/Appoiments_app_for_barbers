@@ -5,7 +5,7 @@ from flask import Flask
 
 from .catalog import format_money
 from .config import CONFIGS
-from .extensions import csrf, db, login_manager, migrate
+from .extensions import babel, csrf, db, login_manager, migrate
 from .forms import ActionForm
 from .timeutils import utcnow
 
@@ -32,6 +32,7 @@ def create_app(env: str | None = None) -> Flask:
     migrate.init_app(app, db, directory=str(BACKEND_DIR / "migrations"))
     login_manager.init_app(app)
     csrf.init_app(app)
+    babel.init_app(app, default_translation_directories=str(Path(__file__).parent / "translations"))
 
     # Import models so they are registered with SQLAlchemy and Alembic.
     from . import models  # noqa: F401
@@ -56,5 +57,9 @@ def create_app(env: str | None = None) -> Flask:
         return {"now_year": utcnow().year, "action_form": ActionForm()}
 
     app.jinja_env.filters["money"] = format_money
+
+    from .commands import register_commands
+
+    register_commands(app)
 
     return app

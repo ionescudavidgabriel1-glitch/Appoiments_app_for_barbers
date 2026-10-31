@@ -26,6 +26,8 @@ frontend/
     calendar/appointment.html one booking with its actions
     calendar/time_off.html a barber's time off
     calendar/_status.html status_pill macro (Booked, Completed, No-show...)
+    email/booking.html   the one email layout (inline styles for mail apps)
+    email/booking.txt    its plain-text version
   static/
     css/app.css      design tokens and components (buttons, inputs, ledger, animations)
     js/app.js        small interactions (see "Interactions")

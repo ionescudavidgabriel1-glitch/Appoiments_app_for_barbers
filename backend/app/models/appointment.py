@@ -69,6 +69,8 @@ class Appointment(db.Model):
 
     status: Mapped[str] = mapped_column(String(20), default=AppointmentStatus.CONFIRMED)
     manage_token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    # Rebuilds the manage link for later emails, together with SECRET_KEY.
+    manage_nonce: Mapped[str | None] = mapped_column(String(32))
 
     deposit_cents: Mapped[int] = mapped_column(default=0)
     payment_status: Mapped[str] = mapped_column(String(20), default=PaymentStatus.NOT_REQUIRED)
@@ -78,6 +80,9 @@ class Appointment(db.Model):
 
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
     cancelled_at: Mapped[datetime | None]
+    # When each reminder email went out. Reset when the booking moves.
+    reminder_24h_sent_at: Mapped[datetime | None]
+    reminder_2h_sent_at: Mapped[datetime | None]
 
     shop: Mapped["Shop"] = relationship()  # noqa: F821
     member: Mapped["ShopMember"] = relationship()  # noqa: F821

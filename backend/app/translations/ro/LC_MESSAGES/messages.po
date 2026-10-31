@@ -1,0 +1,194 @@
+# Romanian translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-31 23:31+0200\n"
+"PO-Revision-Date: 2026-10-31 23:31+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ro\n"
+"Language-Team: ro <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: backend/app/notifications.py:148
+#, python-format
+msgid "Booked: %(service)s on %(date)s at %(time)s"
+msgstr "Programare confirmată: %(service)s, %(date)s, ora %(time)s"
+
+#: backend/app/notifications.py:149
+#, python-format
+msgid "You're booked, %(name)s."
+msgstr "Programarea ta e confirmată, %(name)s."
+
+#: backend/app/notifications.py:150
+#, python-format
+msgid "See you at %(shop)s."
+msgstr "Te așteptăm la %(shop)s."
+
+#: backend/app/notifications.py:151 backend/app/notifications.py:175 backend/app/notifications.py:295
+msgid "See or change your booking"
+msgstr "Vezi sau modifică programarea"
+
+#: backend/app/notifications.py:153
+msgid "Need to change or cancel? Use the button any time before your appointment."
+msgstr "Vrei să schimbi ora sau să anulezi? Folosește butonul oricând înainte de programare."
+
+#: backend/app/notifications.py:158
+#, python-format
+msgid "New booking: %(guest)s on %(date)s at %(time)s"
+msgstr "Programare nouă: %(guest)s, %(date)s, ora %(time)s"
+
+#: backend/app/notifications.py:159
+msgid "New booking"
+msgstr "Programare nouă"
+
+#: backend/app/notifications.py:160
+#, python-format
+msgid "%(guest)s booked %(service)s with you."
+msgstr "%(guest)s s-a programat la tine pentru %(service)s."
+
+#: backend/app/notifications.py:172
+#, python-format
+msgid "Your booking moved: %(date)s at %(time)s"
+msgstr "Programarea ta s-a mutat: %(date)s, ora %(time)s"
+
+#: backend/app/notifications.py:173
+msgid "Your booking has moved"
+msgstr "Programarea ta s-a mutat"
+
+#: backend/app/notifications.py:174
+#, python-format
+msgid "Here are the new details of your booking at %(shop)s."
+msgstr "Iată noile detalii ale programării tale la %(shop)s."
+
+#: backend/app/notifications.py:181
+#, python-format
+msgid "Booking moved: %(guest)s, now %(date)s at %(time)s"
+msgstr "Programare mutată: %(guest)s, acum %(date)s, ora %(time)s"
+
+#: backend/app/notifications.py:183
+msgid "A booking has moved"
+msgstr "O programare s-a mutat"
+
+#: backend/app/notifications.py:184
+#, python-format
+msgid "New details for %(guest)s's booking."
+msgstr "Noile detalii ale programării pentru %(guest)s."
+
+#: backend/app/notifications.py:190
+#, python-format
+msgid "Moved to %(barber)s: %(guest)s"
+msgstr "Mutată la %(barber)s: %(guest)s"
+
+#: backend/app/notifications.py:192
+#, python-format
+msgid "A booking moved to %(barber)s"
+msgstr "O programare s-a mutat la %(barber)s"
+
+#: backend/app/notifications.py:193
+#, python-format
+msgid "%(guest)s's booking is no longer in your calendar."
+msgstr "Programarea pentru %(guest)s nu mai este în calendarul tău."
+
+#: backend/app/notifications.py:204
+#, python-format
+msgid "Cancelled: %(service)s on %(date)s at %(time)s"
+msgstr "Anulată: %(service)s, %(date)s, ora %(time)s"
+
+#: backend/app/notifications.py:205
+msgid "Your booking is cancelled"
+msgstr "Programarea ta a fost anulată"
+
+#: backend/app/notifications.py:206
+#, python-format
+msgid "This booking at %(shop)s is cancelled."
+msgstr "Această programare la %(shop)s a fost anulată."
+
+#: backend/app/notifications.py:207
+msgid "Book another time"
+msgstr "Programează-te la altă oră"
+
+#: backend/app/notifications.py:213
+#, python-format
+msgid "Cancelled: %(guest)s on %(date)s at %(time)s"
+msgstr "Anulată: %(guest)s, %(date)s, ora %(time)s"
+
+#: backend/app/notifications.py:215
+msgid "A booking is cancelled"
+msgstr "O programare a fost anulată"
+
+#: backend/app/notifications.py:216
+#, python-format
+msgid "%(guest)s's booking is cancelled. The time is free again."
+msgstr "Programarea pentru %(guest)s a fost anulată. Ora este din nou liberă."
+
+#: backend/app/notifications.py:225
+msgid "Open in calendar"
+msgstr "Deschide în calendar"
+
+#: backend/app/notifications.py:286
+#, python-format
+msgid "Reminder: %(service)s on %(date)s at %(time)s"
+msgstr "Reamintire: %(service)s, %(date)s, ora %(time)s"
+
+#: backend/app/notifications.py:288
+#, python-format
+msgid "Soon: %(service)s at %(time)s"
+msgstr "În curând: %(service)s, ora %(time)s"
+
+#: backend/app/notifications.py:293
+#, python-format
+msgid "See you soon, %(name)s"
+msgstr "Ne vedem curând, %(name)s"
+
+#: backend/app/notifications.py:294
+#, python-format
+msgid "A reminder of your booking at %(shop)s."
+msgstr "Îți reamintim de programarea ta la %(shop)s."
+
+#: backend/app/notifications.py:297
+msgid "Can't make it? Please cancel with the button, so someone else can come."
+msgstr "Nu mai poți ajunge? Te rugăm să anulezi cu butonul, ca să poată veni altcineva."
+
+#: frontend/templates/email/booking.html:25 frontend/templates/email/booking.txt:6
+msgid "When"
+msgstr "Când"
+
+#: frontend/templates/email/booking.html:26 frontend/templates/email/booking.txt:7
+msgid "Service"
+msgstr "Serviciu"
+
+#: frontend/templates/email/booking.html:29 frontend/templates/email/booking.txt:9
+msgid "Customer"
+msgstr "Client"
+
+#: frontend/templates/email/booking.html:29 frontend/templates/email/booking.txt:10
+msgid "Phone"
+msgstr "Telefon"
+
+#: frontend/templates/email/booking.html:31 frontend/templates/email/booking.txt:12
+msgid "Barber"
+msgstr "Frizer"
+
+#: frontend/templates/email/booking.html:31 frontend/templates/email/booking.txt:13
+msgid "Where"
+msgstr "Unde"
+
+#: frontend/templates/email/booking.html:58 frontend/templates/email/booking.txt:22
+#, python-format
+msgid "Sent by %(shop)s through Barbershop Appointments."
+msgstr "Trimis de %(shop)s prin Barbershop Appointments."
+
+#: frontend/templates/email/booking.html:59 frontend/templates/email/booking.txt:23
+#, python-format
+msgid "Questions? Call %(phone)s."
+msgstr "Ai întrebări? Sună la %(phone)s."
+

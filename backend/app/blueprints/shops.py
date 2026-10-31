@@ -24,7 +24,7 @@ from ..catalog import hours_by_day, save_working_hours, slug_taken, to_cents, un
 from ..decorators import role_required
 from ..extensions import db
 from ..forms import ServiceForm, ShopForm, WorkingHoursForm, shown_end
-from ..models import Invite, Role, Service, Shop, ShopMember
+from ..models import Invite, Language, Role, Service, Shop, ShopMember
 from ..security import generate_token, hash_token
 from ..timeutils import utcnow
 
@@ -98,6 +98,10 @@ def fill_shop(shop: Shop, form: ShopForm) -> None:
     shop.timezone = form.timezone.data
     shop.currency = form.currency.data
     shop.slot_minutes = form.slot_minutes.data
+    if form.language.data == "auto":
+        shop.language = Language.for_timezone(shop.timezone)
+    else:
+        shop.language = form.language.data
 
 
 @bp.get("/<slug>/")

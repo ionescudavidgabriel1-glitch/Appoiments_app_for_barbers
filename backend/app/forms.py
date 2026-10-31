@@ -133,6 +133,16 @@ class ShopForm(FlaskForm):
     phone = StringField("Phone", filters=[strip], validators=[Optional(), Length(max=40)])
     timezone = SelectField("Timezone", choices=TIMEZONES, default="Europe/Bucharest")
     currency = SelectField("Currency", choices=CURRENCIES, default="RON")
+    language = SelectField(
+        "Language of emails",
+        choices=[
+            SelectChoice("auto", "From the shop's country (Romanian in Romania, else English)"),
+            SelectChoice("ro", "Romanian"),
+            SelectChoice("en", "English"),
+        ],
+        default="auto",
+        description="Booking emails to customers and barbers use this language.",
+    )
     slot_minutes = SelectField(
         "Offer booking times",
         choices=SLOT_CHOICES,

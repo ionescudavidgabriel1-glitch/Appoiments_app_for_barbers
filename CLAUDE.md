@@ -6,7 +6,7 @@ Guidance for Claude when working in this repository.
 
 **Appoiments_app_for_barbers** is a web app where customers book appointments at a barbershop, and the shop manages its barbers, services and schedules.
 
-Status: phase 5 (management) is done. Next is phase 6 (notifications). Deposits (Stripe) are decided but not yet placed in a phase; bookings are confirmed without payment for now. Follow the design system in `frontend/README.md` for new pages, and use the frontend-design skill for UI work.
+Status: phase 6 (notifications) is done. Next: translating the interface (language switcher), then phase 7 (polish and deploy). Deposits (Stripe) are decided but not yet placed in a phase; bookings are confirmed without payment for now. Follow the design system in `frontend/README.md` for new pages, and use the frontend-design skill for UI work.
 
 ## Stack (confirmed)
 
@@ -30,6 +30,8 @@ Product decisions (confirmed):
 - Payments: a shop can optionally require a deposit (Stripe). Unpaid deposit bookings hold their slot for a limited time.
 - Guests can cancel or reschedule online any time before the appointment starts.
 - Owners manage every booking at their shop; barbers manage only their own.
+- Notifications: email only for now (no SMS). Guests get confirmation, change and cancellation emails, and reminders 24 and 2 hours before. Only the barber gets booking alerts, not the owner.
+- Language: emails use the shop's language (Romanian or English, from its country/timezone, changeable in settings). Translating the whole interface, with a language switcher, is a separate step after phase 6.
 
 ## Build phases
 

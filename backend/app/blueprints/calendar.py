@@ -24,6 +24,7 @@ from ..booking import (
 from ..extensions import db
 from ..forms import TimeOffForm, shown_end
 from ..models import Appointment, AppointmentStatus, Shop, ShopMember, TimeOff
+from ..notifications import notify_cancelled, notify_moved
 from ..timeutils import to_local, to_utc, utcnow
 from .booking import ANY_BARBER, parse_date, read_choices, reschedule_defaults
 
@@ -165,6 +166,7 @@ def cancel(slug, appointment_id):
     a = Access(slug).appointment_or_404(appointment_id)
     try:
         cancel_booking(a, utcnow())
+        notify_cancelled(a, by_user_id=current_user.id)
         flash(f"{a.guest_name}'s booking is cancelled. The time is free again.", "success")
     except CannotChange:
         flash("This booking can't be cancelled any more.", "error")
@@ -213,7 +215,9 @@ def reschedule(slug, appointment_id):
             flash("Pick a new time first.", "error")
         else:
             try:
+                old_member = a.member
                 reschedule_booking(a, c["candidates"], c["day"], c["start"], utcnow())
+                notify_moved(a, old_member, by_user_id=current_user.id)
                 flash(f"Moved to {format_when(a, access.shop.timezone)}.", "success")
                 return back_to(a)
             except (SlotTaken, CannotChange):

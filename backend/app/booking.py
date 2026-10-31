@@ -21,7 +21,7 @@ from .models import (
     TimeOff,
     WorkingHours,
 )
-from .security import generate_token, hash_token
+from .security import hash_token, new_booking_token
 from .timeutils import to_local, to_utc
 
 BOOKING_DAYS_AHEAD = 30
@@ -216,7 +216,7 @@ def create_booking(
     Returns the appointment and the raw manage-link token (only its hash is
     stored). Raises SlotTaken if nobody is free any more.
     """
-    token = generate_token()
+    nonce, token = new_booking_token()
 
     def save(member, start_utc):
         appointment = Appointment(
@@ -230,6 +230,7 @@ def create_booking(
             guest_phone=guest_phone,
             status=AppointmentStatus.CONFIRMED,
             manage_token_hash=hash_token(token),
+            manage_nonce=nonce,
         )
         db.session.add(appointment)
         return appointment, token
@@ -271,6 +272,8 @@ def reschedule_booking(
         appointment.member = member
         appointment.start_at = start_utc
         appointment.end_at = start_utc + timedelta(minutes=service.duration_min)
+        appointment.reminder_24h_sent_at = None
+        appointment.reminder_2h_sent_at = None
         return appointment
 
     return _place(appointment.shop, service, members, day, start, now, save, ignore=appointment)

@@ -14,6 +14,11 @@ def _database_url():
     return url
 
 
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    return default if value is None else value.strip().lower() in ("1", "true", "yes", "on")
+
+
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-insecure-key")
     SQLALCHEMY_DATABASE_URI = _database_url()
@@ -22,6 +27,26 @@ class Config:
     BOOKING_HOLD_MINUTES = 15
     # How long a barber invite link stays valid.
     INVITE_EXPIRY_DAYS = 7
+
+    # Links in emails sent outside a web request (reminders) start with this.
+    APP_BASE_URL = os.environ.get("APP_BASE_URL", "http://127.0.0.1:5000").rstrip("/")
+
+    # Email. MAIL_BACKEND: "smtp" sends for real; "file" saves each email as an
+    # .eml file in backend/instance/outbox/ (the default when SMTP_HOST is unset);
+    # "console" prints it; "memory" keeps it in a list (tests).
+    SMTP_HOST = os.environ.get("SMTP_HOST", "")
+    SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+    SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "")
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+    SMTP_USE_TLS = _env_bool("SMTP_USE_TLS", True)
+    MAIL_BACKEND = os.environ.get("MAIL_BACKEND") or ("smtp" if SMTP_HOST else "file")
+    MAIL_FROM = os.environ.get("MAIL_FROM", "Barbershop Appointments <no-reply@localhost>")
+
+    # How often the reminders worker looks for appointments to remind about.
+    REMINDER_CHECK_MINUTES = 5
+
+    # The interface is English for now; emails use each shop's language.
+    BABEL_DEFAULT_LOCALE = "en"
 
 
 class DevelopmentConfig(Config):
@@ -32,6 +57,7 @@ class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite://"
     WTF_CSRF_ENABLED = False
+    MAIL_BACKEND = "memory"
 
 
 class ProductionConfig(Config):
@@ -42,6 +68,8 @@ class ProductionConfig(Config):
     def validate(cls):
         if not os.environ.get("SECRET_KEY"):
             raise RuntimeError("SECRET_KEY must be set in production")
+        if cls.MAIL_BACKEND == "smtp" and not cls.SMTP_HOST:
+            raise RuntimeError("SMTP_HOST must be set when MAIL_BACKEND is smtp")
 
 
 CONFIGS = {

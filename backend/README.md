@@ -14,6 +14,9 @@ backend/
     forms.py         Flask-WTF forms (accounts, shop, service, working hours)
     catalog.py       shop and service rules: slugs, prices in cents, saving working hours
     booking.py       booking rules: free start times, creating, moving and cancelling bookings
+    notifications.py emails about bookings, and reminders
+    commands.py      flask send-reminders and flask reminders-worker
+    translations/    Romanian catalog for emails (messages.po, compiled to messages.mo)
     decorators.py    role_required: limits a view to certain roles
     security.py      tokens for invite and booking links (stored as SHA-256 hashes)
     timeutils.py     UTC helpers and shop-timezone conversion
@@ -135,6 +138,46 @@ Database rules:
 - Check constraints cover roles, statuses, positive durations and start before end.
 - A partial unique index stops two active bookings (`pending_payment` or `confirmed`) from starting at the same time with the same barber. The booking service (phase 4) will reject overlapping times.
 - Foreign keys are enforced on SQLite too. They are switched off only while migrations run.
+
+## Emails and reminders (`app/notifications.py`)
+
+| Event | Guest | Barber |
+| --- | --- | --- |
+| Booked | Confirmation with the private link | New booking |
+| Moved (by guest or shop) | New details | New details; the old barber hears if it moved to someone else |
+| Cancelled (by guest or shop) | Cancellation, with a link to book again | Cancellation |
+| 24 hours before | Reminder | - |
+| 2 hours before | Reminder | - |
+
+- A barber is never emailed about a change they made themselves. The owner gets no emails (as an owner).
+- Emails are written in the shop's language (`Shop.language`: `ro` or `en`). New shops pick it from the timezone (Bucharest and Chisinau give Romanian), and owners can change it in shop settings.
+- Each email has an HTML and a plain-text part, from `frontend/templates/email/booking.html` and `.txt`.
+- Sending never raises: a failed email is logged and the booking change still stands.
+- Booking links in later emails are rebuilt from `Appointment.manage_nonce` and `SECRET_KEY` (`security.booking_token`). The database still stores only the link's hash. Changing `SECRET_KEY` makes new emails carry links that no longer match existing bookings.
+
+Where emails go (`MAIL_BACKEND`, see `.env.example`):
+- `file` (default when `SMTP_HOST` is empty): saved as `.eml` files in `backend/instance/outbox/`. Open one in a mail app such as Outlook or Thunderbird.
+- `smtp`: sent through `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_USE_TLS`, from `MAIL_FROM`.
+- `console`: printed in the terminal. `memory`: kept in a list (tests).
+
+Reminders:
+- Due when the booking is confirmed, starts within 24 hours (or 2 hours), and was booked before that window began, so a last-minute booking doesn't get a reminder right after its confirmation. If the 2-hour reminder is due, a late 24-hour one is skipped. Moving a booking resets both.
+- `flask reminders-worker` keeps running and checks every `REMINDER_CHECK_MINUTES` (5). Run one next to the web server (in production, a separate worker process). `flask send-reminders` checks once, for use from cron.
+- Each reminder is claimed with a conditional UPDATE before it is sent, so two workers never send the same one twice.
+- Links in reminders start with `APP_BASE_URL`.
+
+## Translations
+
+Emails are translated with Flask-Babel. The interface is still English only. Wrap new text in `_()` and update the catalog:
+
+```bash
+pybabel extract -F babel.cfg -k _ -o backend/app/translations/messages.pot .
+pybabel update -i backend/app/translations/messages.pot -d backend/app/translations
+# translate the new entries in backend/app/translations/ro/LC_MESSAGES/messages.po
+pybabel compile -d backend/app/translations
+```
+
+Commit both `messages.po` and the compiled `messages.mo`.
 
 ## Migrations
 

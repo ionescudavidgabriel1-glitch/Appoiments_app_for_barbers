@@ -1,0 +1,23 @@
+{#- Plain-text version of email/booking.html. -#}
+{{ heading }}
+
+{{ intro }}
+
+{{ _("When") }}: {{ d.date }}, {{ d.time }}–{{ d.end_time }}
+{{ _("Service") }}: {{ d.service }} · {{ d.price }}
+{% if for_barber -%}
+{{ _("Customer") }}: {{ d.guest }}
+{{ _("Phone") }}: {{ a.guest_phone }}
+{% else -%}
+{{ _("Barber") }}: {{ d.barber }}
+{{ _("Where") }}: {{ shop.name }}{% if shop.address %}, {{ shop.address }}{% endif %}
+{% endif %}
+{% if button_url and button_label -%}
+{{ button_label }}: {{ button_url }}
+{% endif %}
+{% if note -%}
+{{ note }}
+{% endif %}
+--
+{{ _("Sent by %(shop)s through Barbershop Appointments.", shop=shop.name) }}
+{% if shop.phone and not for_barber %}{{ _("Questions? Call %(phone)s.", phone=shop.phone) }}{% endif %}

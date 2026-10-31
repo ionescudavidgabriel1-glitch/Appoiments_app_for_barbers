@@ -13,12 +13,27 @@ class DepositMode:
     ALL = (NONE, REQUIRED)
 
 
+class Language:
+    """Languages for messages to a shop's customers and barbers."""
+
+    ROMANIAN = "ro"
+    ENGLISH = "en"
+    ALL = (ROMANIAN, ENGLISH)
+    # Shops in these timezones default to Romanian; everywhere else to English.
+    BY_TIMEZONE = {"Europe/Bucharest": ROMANIAN, "Europe/Chisinau": ROMANIAN}
+
+    @classmethod
+    def for_timezone(cls, tz: str) -> str:
+        return cls.BY_TIMEZONE.get(tz, cls.ENGLISH)
+
+
 class Shop(db.Model):
     __tablename__ = "shops"
     __table_args__ = (
         CheckConstraint(f"deposit_mode IN {DepositMode.ALL}", name="ck_shops_deposit_mode"),
         CheckConstraint("deposit_cents >= 0", name="ck_shops_deposit_cents"),
         CheckConstraint("slot_minutes > 0", name="ck_shops_slot_minutes"),
+        CheckConstraint(f"language IN {Language.ALL}", name="ck_shops_language"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -32,6 +47,10 @@ class Shop(db.Model):
     deposit_mode: Mapped[str] = mapped_column(String(20), default=DepositMode.NONE)
     deposit_cents: Mapped[int] = mapped_column(default=0)
     currency: Mapped[str] = mapped_column(String(3), default="RON")
+    # Language of emails to this shop's customers and barbers.
+    language: Mapped[str] = mapped_column(
+        String(5), default=Language.ENGLISH, server_default=Language.ENGLISH
+    )
     # Booking start times are offered on this grid, e.g. every 15 minutes.
     slot_minutes: Mapped[int] = mapped_column(default=15)
     created_at: Mapped[datetime] = mapped_column(default=utcnow)

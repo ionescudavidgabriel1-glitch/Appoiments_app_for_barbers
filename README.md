@@ -32,6 +32,14 @@ flask run
 
 Open http://127.0.0.1:5000. The `flask` command picks up `FLASK_APP` from `.flaskenv` and secrets from `.env`.
 
+## Reminder emails
+
+Reminders are sent by a separate process. In a second terminal:
+
+```bash
+flask reminders-worker
+```
+
 ## Test and lint
 
 ```bash
@@ -49,6 +57,8 @@ Settings come from environment variables (see `.env.example`):
 | `APP_ENV` | `development`, `testing` or `production` |
 | `SECRET_KEY` | Session signing key. Required in production. |
 | `DATABASE_URL` | Database URL. Defaults to SQLite in `backend/instance/`. |
+| `APP_BASE_URL` | Where the app is reachable; used for links in reminder emails. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_USE_TLS`, `MAIL_FROM` | Sending email. Leave `SMTP_HOST` empty in development: emails are saved to `backend/instance/outbox/`. |
 
 ## Project layout
 
@@ -61,4 +71,4 @@ Each build phase is released as a version (`v0.1.0` for phase 1, and so on) and 
 
 ## Status
 
-Phase 5 (management) is done: a daily calendar for owners and barbers, cancel and reschedule for the shop and for guests, completed/no-show, and time off. Next is phase 6 (notifications).
+Phase 6 (notifications) is done: booking, change and cancellation emails to guests and barbers, reminders 24 and 2 hours before, in Romanian or English per shop. Next: translating the interface, then phase 7 (polish and deploy).
