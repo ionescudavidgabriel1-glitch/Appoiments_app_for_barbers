@@ -14,7 +14,10 @@
         {% if shop.address %}<span class="block sm:inline sm:before:content-['_·_']">{{ shop.address }}</span>{% endif %}
       </p>
     </div>
-    <a href="{{ url_for('shops.edit_shop', slug=shop.slug) }}" class="btn btn-quiet">Shop settings</a>
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('calendar.day_view', slug=shop.slug) }}" class="btn btn-primary">Calendar</a>
+      <a href="{{ url_for('shops.edit_shop', slug=shop.slug) }}" class="btn btn-quiet">Shop settings</a>
+    </div>
   </div>
 
   {# Services #}
@@ -92,6 +95,7 @@
               </div>
               <div class="flex gap-1">
                 <a href="{{ url_for('shops.edit_hours', slug=shop.slug, member_id=member.id) }}" class="btn-link text-sm">Working hours</a>
+                <a href="{{ url_for('calendar.time_off', slug=shop.slug, member_id=member.id) }}" class="btn-link text-sm">Time off</a>
                 {{ post_button(url_for('shops.toggle_member', slug=shop.slug, member_id=member.id),
                                "Show" if not member.active else "Hide", style="btn-link text-sm") }}
               </div>

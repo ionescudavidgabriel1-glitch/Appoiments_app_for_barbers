@@ -23,6 +23,7 @@
               <div class="flex flex-wrap items-baseline justify-between gap-2 py-2">
                 <a href="{{ url_for('shops.overview', slug=shop.slug) }}" class="text-lg font-semibold underline decoration-line decoration-2 underline-offset-4 hover:decoration-brass">{{ shop.name }}</a>
                 <span class="text-sm text-taupe">Booking page: <a href="{{ url_for('booking.book', slug=shop.slug) }}" target="_blank" rel="noopener" class="font-semibold text-walnut underline decoration-line decoration-2 underline-offset-4 hover:decoration-brass">/s/{{ shop.slug }}</a></span>
+                <a href="{{ url_for('calendar.day_view', slug=shop.slug) }}" class="btn-link text-sm">Calendar</a>
               </div>
             </li>
           {% endfor %}
@@ -49,7 +50,9 @@
                 <span class="text-lg font-semibold">{{ m.shop.name }}</span>
                 <span class="flex items-center gap-3">
                   {% if not m.active %}<span class="text-sm text-taupe">Hidden from booking</span>{% endif %}
+                  <a href="{{ url_for('calendar.day_view', slug=m.shop.slug) }}" class="btn-link text-sm">My calendar</a>
                   <a href="{{ url_for('shops.edit_hours', slug=m.shop.slug, member_id=m.id) }}" class="btn-link text-sm">My working hours</a>
+                  <a href="{{ url_for('calendar.time_off', slug=m.shop.slug, member_id=m.id) }}" class="btn-link text-sm">Time off</a>
                 </span>
               </div>
             </li>

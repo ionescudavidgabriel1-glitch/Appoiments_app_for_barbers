@@ -53,23 +53,33 @@ def bookable_days(shop: Shop, now: datetime) -> list[date]:
     return [today + timedelta(days=n) for n in range(BOOKING_DAYS_AHEAD)]
 
 
-def busy_times(member_ids: list[int], start: datetime, end: datetime, now: datetime):
-    """Appointments and time off that block each member between start and end (UTC)."""
+def busy_times(
+    member_ids: list[int],
+    start: datetime,
+    end: datetime,
+    now: datetime,
+    ignore: Appointment | None = None,
+):
+    """Appointments and time off that block each member between start and end (UTC).
+
+    `ignore` leaves one appointment out, so a booking being moved doesn't block
+    its own current time.
+    """
     busy = {member_id: [] for member_id in member_ids}
     if not member_ids:
         return busy
 
-    appointments = db.session.scalars(
-        select(Appointment).where(
-            Appointment.member_id.in_(member_ids),
-            Appointment.status.in_(AppointmentStatus.BLOCKING),
-            # An unpaid deposit booking stops blocking once its hold expires.
-            or_(Appointment.hold_expires_at.is_(None), Appointment.hold_expires_at > now),
-            Appointment.start_at < end,
-            Appointment.end_at > start,
-        )
+    query = select(Appointment).where(
+        Appointment.member_id.in_(member_ids),
+        Appointment.status.in_(AppointmentStatus.BLOCKING),
+        # An unpaid deposit booking stops blocking once its hold expires.
+        or_(Appointment.hold_expires_at.is_(None), Appointment.hold_expires_at > now),
+        Appointment.start_at < end,
+        Appointment.end_at > start,
     )
-    for a in appointments:
+    if ignore is not None:
+        query = query.where(Appointment.id != ignore.id)
+    for a in db.session.scalars(query):
         busy[a.member_id].append(Busy(a.start_at, a.end_at))
 
     time_off = db.session.scalars(
@@ -124,11 +134,16 @@ def day_window_utc(shop: Shop, day: date) -> tuple[datetime, datetime]:
 
 
 def available_slots(
-    shop: Shop, service: Service, members: list[ShopMember], day: date, now: datetime
+    shop: Shop,
+    service: Service,
+    members: list[ShopMember],
+    day: date,
+    now: datetime,
+    ignore: Appointment | None = None,
 ) -> dict[time, list[ShopMember]]:
     """Free local start times on `day`, each with the members free at that time."""
     start, end = day_window_utc(shop, day)
-    busy = busy_times([m.id for m in members], start, end, now)
+    busy = busy_times([m.id for m in members], start, end, now, ignore)
     slots: dict[time, list[ShopMember]] = {}
     for member in members:
         for t in free_starts(shop, member, service, day, busy[member.id], now):
@@ -137,17 +152,52 @@ def available_slots(
 
 
 def days_with_slots(
-    shop: Shop, service: Service, members: list[ShopMember], now: datetime
+    shop: Shop,
+    service: Service,
+    members: list[ShopMember],
+    now: datetime,
+    ignore: Appointment | None = None,
 ) -> dict[date, bool]:
     """For each bookable day, whether at least one time is free."""
     days = bookable_days(shop, now)
     start, _ = day_window_utc(shop, days[0])
     _, end = day_window_utc(shop, days[-1])
-    busy = busy_times([m.id for m in members], start, end, now)
+    busy = busy_times([m.id for m in members], start, end, now, ignore)
     return {
         day: any(free_starts(shop, m, service, day, busy[m.id], now) for m in members)
         for day in days
     }
+
+
+def _place(shop, service, members, day, start, now, save, ignore=None):
+    """Try each member in order: if they are free at `start`, call save(member, start_utc)
+    and commit. Returns save's result, or raises SlotTaken.
+
+    The availability check runs here, inside the transaction, with the member's
+    row locked (on PostgreSQL), so two people can't take overlapping times. The
+    unique index on (member, start) is the last line of defense.
+    """
+    if day not in bookable_days(shop, now):
+        raise SlotTaken
+    window_start, window_end = day_window_utc(shop, day)
+
+    for member in members:
+        db.session.execute(
+            select(ShopMember.id).where(ShopMember.id == member.id).with_for_update()
+        )
+        busy = busy_times([member.id], window_start, window_end, now, ignore)[member.id]
+        if start not in free_starts(shop, member, service, day, busy, now):
+            continue
+        result = save(member, to_utc(datetime.combine(day, start), shop.timezone))
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            continue
+        return result
+
+    db.session.rollback()
+    raise SlotTaken
 
 
 def create_booking(
@@ -165,25 +215,10 @@ def create_booking(
 
     Returns the appointment and the raw manage-link token (only its hash is
     stored). Raises SlotTaken if nobody is free any more.
-
-    The availability check runs again here, inside the transaction, with the
-    member's row locked (on PostgreSQL), so two customers can't book overlapping
-    times. The unique index on (member, start) is the last line of defense.
     """
-    if day not in bookable_days(shop, now):
-        raise SlotTaken
-    window_start, window_end = day_window_utc(shop, day)
+    token = generate_token()
 
-    for member in members:
-        db.session.execute(
-            select(ShopMember.id).where(ShopMember.id == member.id).with_for_update()
-        )
-        busy = busy_times([member.id], window_start, window_end, now)[member.id]
-        if start not in free_starts(shop, member, service, day, busy, now):
-            continue
-
-        start_utc = to_utc(datetime.combine(day, start), shop.timezone)
-        token = generate_token()
+    def save(member, start_utc):
         appointment = Appointment(
             shop=shop,
             member=member,
@@ -197,12 +232,62 @@ def create_booking(
             manage_token_hash=hash_token(token),
         )
         db.session.add(appointment)
-        try:
-            db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
-            continue
         return appointment, token
 
-    db.session.rollback()
-    raise SlotTaken
+    return _place(shop, service, members, day, start, now, save)
+
+
+# Changing bookings (phase 5)
+
+
+class CannotChange(Exception):
+    """The booking can't be changed this way any more (already started, cancelled...)."""
+
+
+def can_change(appointment: Appointment, now: datetime) -> bool:
+    """Cancel and reschedule are allowed until the appointment starts."""
+    return appointment.status in AppointmentStatus.BLOCKING and appointment.start_at > now
+
+
+def can_record_outcome(appointment: Appointment, now: datetime) -> bool:
+    """Completed / no-show can be set once the appointment has started, and corrected later."""
+    return appointment.start_at <= now and appointment.status in (
+        AppointmentStatus.CONFIRMED,
+        AppointmentStatus.COMPLETED,
+        AppointmentStatus.NO_SHOW,
+    )
+
+
+def reschedule_booking(
+    appointment: Appointment, members: list[ShopMember], day: date, start: time, now: datetime
+) -> Appointment:
+    """Move a booking to `start` on `day` with the first free of `members`.
+    The service stays the same. Raises CannotChange or SlotTaken."""
+    if not can_change(appointment, now):
+        raise CannotChange
+    service = appointment.service
+
+    def save(member, start_utc):
+        appointment.member = member
+        appointment.start_at = start_utc
+        appointment.end_at = start_utc + timedelta(minutes=service.duration_min)
+        return appointment
+
+    return _place(appointment.shop, service, members, day, start, now, save, ignore=appointment)
+
+
+def cancel_booking(appointment: Appointment, now: datetime) -> None:
+    if not can_change(appointment, now):
+        raise CannotChange
+    appointment.status = AppointmentStatus.CANCELLED
+    appointment.cancelled_at = now
+    db.session.commit()
+
+
+def record_outcome(appointment: Appointment, status: str, now: datetime) -> None:
+    if status not in (AppointmentStatus.COMPLETED, AppointmentStatus.NO_SHOW):
+        raise ValueError(status)
+    if not can_record_outcome(appointment, now):
+        raise CannotChange
+    appointment.status = status
+    db.session.commit()

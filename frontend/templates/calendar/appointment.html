@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "_form.html" import post_button with context %}
+{% from "calendar/_status.html" import status_pill %}
+
+{% block title %}{{ a.guest_name }} · {{ shop.name }}{% endblock %}
+
+{% block content %}
+<div class="page-enter mx-auto max-w-xl">
+  <div>
+    <a href="{{ url_for('calendar.day_view', slug=shop.slug, day=start.date().isoformat()) }}" class="btn-link -ml-2 text-sm text-taupe">Back to the calendar</a>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <h1 class="font-display text-5xl font-extrabold">{{ a.guest_name }}</h1>
+      {{ status_pill(a.status) }}
+    </div>
+  </div>
+
+  <div class="ledger mt-8">
+    <p class="pb-3 font-display text-2xl font-extrabold">{{ start.strftime("%A") }} {{ start.day }} {{ start.strftime("%B") }}</p>
+    <div class="ledger-row">
+      <span class="ledger-time">Time</span>
+      <span class="text-lg font-semibold">{{ start.strftime("%H:%M") }} to {{ end.strftime("%H:%M") }}</span>
+    </div>
+    <div class="ledger-row">
+      <span class="ledger-time">For</span>
+      <span>{{ a.service.name }} <span class="text-taupe">· {{ a.service.price_cents | money(shop.currency) }}</span></span>
+    </div>
+    <div class="ledger-row">
+      <span class="ledger-time">With</span>
+      <span>{{ a.member.display_name }}</span>
+    </div>
+    <div class="ledger-row">
+      <span class="ledger-time">Phone</span>
+      <a href="tel:{{ a.guest_phone }}" class="underline decoration-line decoration-2 underline-offset-4 hover:decoration-brass">{{ a.guest_phone }}</a>
+    </div>
+    <div class="ledger-row">
+      <span class="ledger-time">Email</span>
+      <a href="mailto:{{ a.guest_email }}" class="break-all underline decoration-line decoration-2 underline-offset-4 hover:decoration-brass">{{ a.guest_email }}</a>
+    </div>
+  </div>
+
+  {% if can_change %}
+    <div class="mt-8 flex flex-wrap items-start gap-3">
+      <a href="{{ url_for('calendar.reschedule', slug=shop.slug, appointment_id=a.id) }}" class="btn btn-primary">Move to another time</a>
+      <details>
+        <summary class="btn btn-quiet list-none [&::-webkit-details-marker]:hidden">Cancel booking</summary>
+        <div class="flash mt-3 max-w-sm rounded-2xl border border-oxblood/30 bg-oxblood/5 p-4">
+          <p class="text-sm">Cancel {{ a.guest_name }}'s booking? The time becomes free on the booking page. Let them know, for example by phone.</p>
+          <div class="mt-3">
+            {{ post_button(url_for('calendar.cancel', slug=shop.slug, appointment_id=a.id), "Yes, cancel it", style="btn btn-primary text-sm", loading="Cancelling…") }}
+          </div>
+        </div>
+      </details>
+    </div>
+  {% endif %}
+
+  {% if can_record_outcome %}
+    <div class="mt-8">
+      <h2 class="text-lg font-semibold">How did it go?</h2>
+      <div class="mt-3 flex flex-wrap gap-3">
+        {% if a.status != "completed" %}
+          {{ post_button(url_for('calendar.mark_completed', slug=shop.slug, appointment_id=a.id), "Completed", style="btn btn-quiet") }}
+        {% endif %}
+        {% if a.status != "no_show" %}
+          {{ post_button(url_for('calendar.mark_no_show', slug=shop.slug, appointment_id=a.id), "Didn't show up", style="btn btn-quiet") }}
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -50,7 +50,7 @@
   {% if is_new %}
     <div class="mt-6 rounded-3xl border-2 border-brass/50 bg-brass/10 p-5">
       <p class="font-semibold">Keep this link to see your booking</p>
-      <p class="mt-1 text-sm text-taupe">Anyone with the link can see it, so don't share it.</p>
+      <p class="mt-1 text-sm text-taupe">Use it to change or cancel. Anyone with the link can do that too, so don't share it.</p>
       <div class="mt-3 flex flex-col gap-2 sm:flex-row">
         <input id="booking-link" class="input font-mono text-sm" value="{{ link }}" readonly aria-label="Your booking link">
         <button type="button" class="btn btn-primary shrink-0" data-copy="booking-link">Copy link</button>
@@ -58,10 +58,21 @@
     </div>
   {% endif %}
 
-  {% if not is_past and appointment.status == "confirmed" %}
-    <p class="mt-6 text-sm text-taupe">
-      Need to change or cancel? {% if shop.phone %}Call the shop at <a href="tel:{{ shop.phone }}" class="font-semibold text-walnut underline decoration-2 underline-offset-4">{{ shop.phone }}</a>.{% else %}Contact the shop.{% endif %}
-    </p>
+  {% if can_change %}
+    <div class="mt-8 flex flex-wrap items-start gap-3">
+      <a href="{{ url_for('booking.guest_reschedule', slug=shop.slug, token=token) }}" class="btn btn-primary">Change the time</a>
+      {# A two-step cancel: open, then confirm. Works without JavaScript. #}
+      <details class="group">
+        <summary class="btn btn-quiet list-none [&::-webkit-details-marker]:hidden">Cancel booking</summary>
+        <div class="flash mt-3 max-w-sm rounded-2xl border border-oxblood/30 bg-oxblood/5 p-4">
+          <p class="text-sm">Cancel {{ appointment.service.name }} on {{ start.strftime("%A") }} at {{ start.strftime("%H:%M") }}? The time goes back to the shop.</p>
+          <form method="post" action="{{ url_for('booking.guest_cancel', slug=shop.slug, token=token) }}" class="mt-3">
+            {{ action_form.hidden_tag() }}
+            <button type="submit" class="btn btn-primary text-sm" data-loading-text="Cancelling…">Yes, cancel it</button>
+          </form>
+        </div>
+      </details>
+    </div>
   {% endif %}
 
   <a href="{{ url_for('booking.book', slug=shop.slug) }}" class="btn btn-quiet mt-8">Book another time</a>

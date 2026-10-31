@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "calendar/_status.html" import status_pill %}
+
+{% block title %}{{ day.strftime("%a") }} {{ day.day }} {{ day.strftime("%b") }} · {{ shop.name }}{% endblock %}
+
+{% block content %}
+<div class="page-enter">
+  <div>
+    <a href="{{ url_for('shops.overview', slug=shop.slug) if access.is_owner else url_for('shops.dashboard') }}" class="btn-link -ml-2 text-sm text-taupe">
+      {{ "Back to " ~ shop.name if access.is_owner else "Dashboard" }}
+    </a>
+    <div class="mt-2 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="text-taupe">{{ shop.name }}{% if not access.is_owner %} · your bookings{% endif %}</p>
+        <h1 class="font-display text-5xl font-extrabold">
+          {% if day == today %}Today, {% endif %}{{ day.strftime("%A") }} {{ day.day }} {{ day.strftime("%B") }}
+        </h1>
+      </div>
+      <nav class="flex flex-wrap items-center gap-2" aria-label="Change day">
+        <a href="{{ url_for('calendar.day_view', slug=shop.slug, day=prev_day.isoformat()) }}" class="btn btn-quiet !px-3" aria-label="Previous day">&larr;</a>
+        {% if day != today %}
+          <a href="{{ url_for('calendar.day_view', slug=shop.slug) }}" class="btn btn-quiet">Today</a>
+        {% endif %}
+        <a href="{{ url_for('calendar.day_view', slug=shop.slug, day=next_day.isoformat()) }}" class="btn btn-quiet !px-3" aria-label="Next day">&rarr;</a>
+        <form method="get" class="flex gap-2">
+          <label for="jump" class="sr-only">Go to date</label>
+          <input id="jump" type="date" name="day" value="{{ day.isoformat() }}" class="input !w-auto !py-2" onchange="this.form.submit()">
+        </form>
+      </nav>
+    </div>
+  </div>
+
+  {% if not columns %}
+    <p class="mt-10 text-taupe">No barbers yet.</p>
+  {% endif %}
+
+  <div class="mt-8 grid gap-6 {{ 'lg:grid-cols-2' if columns | length > 1 }}">
+    {% for col in columns %}
+      {% set m = col.member %}
+      <section class="ledger">
+        <div class="flex flex-wrap items-baseline justify-between gap-2 pb-3">
+          <h2 class="font-display text-2xl font-extrabold">{{ m.display_name }}</h2>
+          <p class="text-sm text-taupe">
+            {% if col.shifts %}
+              {% for s, e in col.shifts %}{{ s.strftime("%H:%M") }}–{{ e.strftime("%H:%M") }}{% if not loop.last %}, {% endif %}{% endfor %}
+            {% else %}
+              Day off
+            {% endif %}
+            · {{ col.booked }} {{ "booking" if col.booked == 1 else "bookings" }}
+          </p>
+        </div>
+
+        {% for t in col.time_off %}
+          <div class="ledger-row !grid-cols-1 py-2">
+            <p class="rounded-xl bg-steam px-3 py-2 text-sm text-taupe">Time off{% if t.reason %}: {{ t.reason }}{% endif %}</p>
+          </div>
+        {% endfor %}
+
+        {% for a, start, end in col.rows %}
+          <a href="{{ url_for('calendar.appointment', slug=shop.slug, appointment_id=a.id) }}"
+             class="ledger-row group rounded-lg transition-colors hover:bg-towel {{ 'opacity-50' if a.status == 'cancelled' }}">
+            <span class="ledger-time">{{ start.strftime("%H:%M") }}</span>
+            <span class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5 pr-2">
+              <span>
+                <span class="font-semibold group-hover:underline">{{ a.guest_name }}</span>
+                <span class="block text-sm text-taupe">{{ a.service.name }} · until {{ end.strftime("%H:%M") }}</span>
+              </span>
+              {{ status_pill(a.status) }}
+            </span>
+          </a>
+        {% else %}
+          <p class="border-t border-line pt-4 text-taupe">{{ "No bookings." if col.shifts else "Not working this day." }}</p>
+        {% endfor %}
+      </section>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -2,6 +2,16 @@
 
 Each build phase is released as one version. See "Versioning" in `CLAUDE.md`.
 
+## v0.5.0 - Phase 5: Management (2026-10-31)
+
+- Daily calendar at `/shops/<shop>/calendar`: each barber's hours, time off and bookings, with previous/next day and a date picker. Owners see the whole shop; barbers see their own bookings.
+- Booking page for the shop with the customer's phone and email; cancel, move to another time (owners can also move to another barber), and record completed or no-show after it starts.
+- Guests can change the time or cancel through their private link, any time before the appointment starts.
+- Rescheduling reuses the booking rules and safety checks; the booking's own old time counts as free, and the page opens on the booking's day.
+- Time off per barber (holidays, sick days), editable by the owner or the barber; it hides those times from the booking page and warns about bookings already inside it.
+- Booking steps shared between booking and reschedule pages (`booking/_steps.html`).
+- Tests for cancel, reschedule, outcomes, access between owner, barbers and outsiders, and time off.
+
 ## v0.4.1 - Shifts until midnight (2026-10-31)
 
 - Working hours can end at 00:00, meaning until midnight; customers can book the last slot before midnight.

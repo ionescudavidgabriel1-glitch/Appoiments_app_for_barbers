@@ -38,12 +38,15 @@ def create_app(env: str | None = None) -> Flask:
     from .blueprints.admin import bp as admin_bp
     from .blueprints.auth import bp as auth_bp
     from .blueprints.booking import bp as booking_bp
+    from .blueprints.calendar import bp as calendar_bp
     from .blueprints.main import bp as main_bp
     from .blueprints.shops import bp as shops_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(shops_bp, url_prefix="/shops")
+    # Calendar, single bookings and time off, also under /shops/<slug>/.
+    app.register_blueprint(calendar_bp, url_prefix="/shops")
     app.register_blueprint(admin_bp, url_prefix="/admin")
     # Public booking pages live at /s/<shop-slug>.
     app.register_blueprint(booking_bp, url_prefix="/s")

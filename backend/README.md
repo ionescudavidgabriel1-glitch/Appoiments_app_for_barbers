@@ -13,12 +13,12 @@ backend/
     extensions.py    db, migrate, login_manager, csrf
     forms.py         Flask-WTF forms (accounts, shop, service, working hours)
     catalog.py       shop and service rules: slugs, prices in cents, saving working hours
-    booking.py       booking rules: free start times, creating a booking safely
+    booking.py       booking rules: free start times, creating, moving and cancelling bookings
     decorators.py    role_required: limits a view to certain roles
     security.py      tokens for invite and booking links (stored as SHA-256 hashes)
     timeutils.py     UTC helpers and shop-timezone conversion
     models/          SQLAlchemy models
-    blueprints/      main, auth, shops, admin, booking
+    blueprints/      main, auth, shops, calendar, admin, booking
   migrations/        Alembic migrations (Flask-Migrate)
   tests/             pytest suite
   instance/          local SQLite database (not in git)
@@ -31,6 +31,7 @@ backend/
 | `main` | `/` | `GET /` home page |
 | `auth` | `/auth` | `GET, POST /signup`, `GET, POST /login`, `POST /logout`, `GET, POST /invite/<token>` |
 | `shops` | `/shops` | dashboard and shop management, see below |
+| `calendar` | `/shops` | daily calendar, single bookings, time off, see below |
 | `admin` | `/admin` | empty |
 | `booking` | `/s` | public booking pages, see below |
 
@@ -53,6 +54,21 @@ All pages need a login. Pages for a shop are owner-only; anyone else gets 404, s
 | POST | `/shops/<slug>/barbers/<id>/toggle` | Hide or show a barber | shop owner |
 | GET, POST | `/shops/<slug>/barbers/<id>/hours` | Weekly working hours | shop owner, or that barber |
 
+### Calendar and bookings (`/shops/<slug>/...`, blueprint `calendar`)
+
+The shop's owner sees and manages every booking; a barber sees and manages only their own bookings and time off. Anyone else gets 404.
+
+| Method | Path | What it does |
+| --- | --- | --- |
+| GET | `/shops/<slug>/calendar?day=YYYY-MM-DD` | One day: each barber's hours, time off and bookings (default today) |
+| GET | `/shops/<slug>/appointments/<id>` | One booking: customer, contact, actions |
+| POST | `/shops/<slug>/appointments/<id>/cancel` | Cancel (frees the time) |
+| GET, POST | `/shops/<slug>/appointments/<id>/reschedule` | Move to another time; the owner can pick another barber |
+| POST | `/shops/<slug>/appointments/<id>/completed` | Record that it happened |
+| POST | `/shops/<slug>/appointments/<id>/no-show` | Record that the customer didn't come |
+| GET, POST | `/shops/<slug>/barbers/<id>/time-off` | List and add time off |
+| POST | `/shops/<slug>/barbers/<id>/time-off/<time_off_id>/delete` | Remove time off |
+
 ### Public booking (`/s`)
 
 No login. Guests never have accounts.
@@ -62,6 +78,8 @@ No login. Guests never have accounts.
 | GET | `/s/<slug>/` | Booking page. Choices travel in the query string: `?service=<id>&barber=<id or any>&day=YYYY-MM-DD&start=HH:MM` |
 | POST | `/s/<slug>/` | Book: the same choices plus `guest_name`, `guest_email`, `guest_phone` |
 | GET | `/s/<slug>/booking/<token>` | The guest's private booking page (`?new=1` right after booking shows the link to keep) |
+| POST | `/s/<slug>/booking/<token>/cancel` | The guest cancels |
+| GET, POST | `/s/<slug>/booking/<token>/reschedule` | The guest moves the booking to another free time |
 
 ## Booking rules (`app/booking.py`)
 
@@ -73,6 +91,9 @@ No login. Guests never have accounts.
 - `create_booking` checks availability again inside the transaction, locking the barber's row on PostgreSQL, so two guests can't book overlapping times. The unique index on (barber, start) is the last line of defense. If the time is gone it raises `SlotTaken`, and the guest is sent back to pick again.
 - The manage link's token is stored only as a SHA-256 hash; the link is shown once after booking.
 - Deposits are not charged yet: every booking is `confirmed`.
+- Cancel and reschedule are allowed until the appointment starts (`can_change`), for guests and the shop alike. Rescheduling keeps the service and runs through the same safe check as booking; the booking's own old time counts as free (`ignore=`).
+- Completed and no-show can be recorded once the appointment has started, and corrected later (`can_record_outcome`). Cancelled bookings have no outcome.
+- Time off is entered in the shop's local time and stored in UTC. Bookings already inside new time off stay booked; the shop is warned to move or cancel them.
 
 ## Catalog rules
 

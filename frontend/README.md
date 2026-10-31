@@ -19,7 +19,13 @@ frontend/
     shops/service_form.html add or edit a service
     shops/hours.html     a barber's weekly working hours
     booking/book.html    public booking page (service, barber, day and time, details)
-    booking/confirmation.html the guest's booking page
+    booking/confirmation.html the guest's booking page, with change and cancel
+    booking/_steps.html  barber and day/time steps, shared by booking and reschedule
+    booking/reschedule.html move a booking (guests and the shop)
+    calendar/day.html    the shop's day: one ledger per barber
+    calendar/appointment.html one booking with its actions
+    calendar/time_off.html a barber's time off
+    calendar/_status.html status_pill macro (Booked, Completed, No-show...)
   static/
     css/app.css      design tokens and components (buttons, inputs, ledger, animations)
     js/app.js        small interactions (see "Interactions")
@@ -42,6 +48,11 @@ Templates are grouped in folders named after their blueprint (`main/`, `auth/`, 
 | Working hours | `/shops/<slug>/barbers/<id>/hours` | `shops/hours.html` |
 | Book (public) | `/s/<slug>/` | `booking/book.html` |
 | Guest's booking | `/s/<slug>/booking/<token>` | `booking/confirmation.html` |
+| Guest moves a booking | `/s/<slug>/booking/<token>/reschedule` | `booking/reschedule.html` |
+| Calendar | `/shops/<slug>/calendar` | `calendar/day.html` |
+| One booking | `/shops/<slug>/appointments/<id>` | `calendar/appointment.html` |
+| Shop moves a booking | `/shops/<slug>/appointments/<id>/reschedule` | `booking/reschedule.html` |
+| Time off | `/shops/<slug>/barbers/<id>/time-off` | `calendar/time_off.html` |
 | Accept an invite | `/auth/invite/<token>` | `auth/invite_signup.html`, `auth/invite_join.html`, `auth/invite_invalid.html` |
 
 ## Forms
@@ -60,6 +71,8 @@ Build form fields with the macros in `_form.html`:
 `field` shows the label, the input, a hint (the field's `description`) and any validation errors, and adds a Show/Hide button to password fields. `submit` takes the button label and the label shown while the form is sending.
 
 For actions that only need a button, like hiding a service, use `post_button(url, label, style=...)`. Import it `with context`, because it uses the `action_form` CSRF token that every page gets.
+
+Destructive actions (cancelling a booking) use a two-step `<details>` box: the first button opens it, the second confirms. It works without JavaScript.
 
 Flash messages use the categories `success` (mint), `error` (oxblood) and `info` (brass). Success and info messages fade out after 6 seconds; errors stay until closed.
 

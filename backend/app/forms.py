@@ -4,6 +4,7 @@ from zoneinfo import available_timezones
 from flask_wtf import FlaskForm
 from wtforms import (
     BooleanField,
+    DateTimeLocalField,
     DecimalField,
     EmailField,
     FieldList,
@@ -260,3 +261,23 @@ class BookingDetailsForm(FlaskForm):
             ),
         ],
     )
+
+
+# Management (phase 5)
+
+
+class TimeOffForm(FlaskForm):
+    """A stretch of time a barber can't be booked, in the shop's local time."""
+
+    start = DateTimeLocalField("From", validators=[DataRequired("Pick when it starts.")])
+    end = DateTimeLocalField("Until", validators=[DataRequired("Pick when it ends.")])
+    reason = StringField(
+        "Note",
+        filters=[strip],
+        description="Only the shop sees this, e.g. Holiday.",
+        validators=[Optional(), Length(max=255, message="Keep it under 255 characters.")],
+    )
+
+    def validate_end(self, field):
+        if self.start.data and field.data and field.data <= self.start.data:
+            raise ValidationError("End after it starts.")

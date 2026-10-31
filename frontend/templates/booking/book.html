@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_form.html" import field %}
+{% from "booking/_steps.html" import step_title, barber_step, time_step %}
 
 {% block title %}Book at {{ shop.name }}{% endblock %}
 
@@ -9,12 +10,6 @@
 
 {# Guests don't need the owner/barber login links. #}
 {% block nav %}{% endblock %}
-
-{% macro step_title(n, text) %}
-  <h2 class="flex items-baseline gap-3 font-display text-3xl font-extrabold">
-    <span class="text-brass">{{ n }}</span>{{ text }}
-  </h2>
-{% endmacro %}
 
 {% block content %}
 <div class="page-enter">
@@ -62,74 +57,12 @@
 
       {# 2. Barber #}
       {% if c.service %}
-        <section {% if not c.barber %}data-focus{% endif %}>
-          {{ step_title(2, "Choose a barber") }}
-          <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <label class="choice">
-              <input type="radio" name="barber" value="{{ any }}" data-refresh {% if c.barber == any %}checked{% endif %}>
-              <span class="choice-card">
-                <span class="block text-lg font-semibold">Any barber</span>
-                <span class="mt-0.5 block text-taupe">See every free time</span>
-              </span>
-            </label>
-            {% for member in c.members %}
-              <label class="choice">
-                <input type="radio" name="barber" value="{{ member.id }}" data-refresh
-                       {% if c.barber is not string and c.barber and c.barber.id == member.id %}checked{% endif %}>
-                <span class="choice-card">
-                  <span class="block text-lg font-semibold">{{ member.display_name }}</span>
-                  <span class="mt-0.5 block text-taupe">Barber</span>
-                </span>
-              </label>
-            {% endfor %}
-          </div>
-        </section>
+        {{ barber_step(c, any, 2) }}
       {% endif %}
 
       {# 3. Day and time #}
       {% if c.barber %}
-        <section {% if not c.start %}data-focus{% endif %}>
-          {{ step_title(3, "Pick a day and time") }}
-          {% if not c.day %}
-            <p class="mt-4 max-w-xl text-taupe">No free times in the next {{ c.days | length }} days. Try another barber or service{% if shop.phone %}, or call {{ shop.phone }}{% endif %}.</p>
-          {% else %}
-            <div class="day-strip mt-4" role="radiogroup" aria-label="Day">
-              {% for day, has_free in c.days.items() %}
-                <label class="choice">
-                  <input type="radio" name="day" value="{{ day.isoformat() }}" data-refresh
-                         {% if day == c.day %}checked{% endif %} {% if not has_free %}disabled{% endif %}>
-                  <span class="choice-card">
-                    <span class="block text-xs font-semibold text-taupe">{{ day.strftime("%a") }}</span>
-                    <span class="block font-display text-2xl font-extrabold leading-tight">{{ day.day }}</span>
-                    <span class="block text-xs text-taupe">{{ day.strftime("%b") }}</span>
-                  </span>
-                </label>
-              {% endfor %}
-            </div>
-
-            <div class="ledger mt-4">
-              <p class="pb-3 font-display text-xl font-bold">
-                {{ c.day.strftime("%A") }} {{ c.day.day }} {{ c.day.strftime("%B") }}
-                <span class="font-sans text-sm font-normal text-taupe">· {{ c.slots | length }} free {{ "time" if c.slots | length == 1 else "times" }}</span>
-              </p>
-              {% for label, times in c.slot_groups %}
-                  <div class="ledger-row !grid-cols-1 gap-2 py-3 sm:!grid-cols-[6.5rem_1fr]">
-                    <span class="ledger-time pt-2">{{ label }}</span>
-                    <div class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-                      {% for t in times %}
-                        <label class="choice">
-                          <input type="radio" name="start" value="{{ t.strftime('%H:%M') }}"
-                                 data-book-label="Book {{ t.strftime('%H:%M') }}{% if c.barber is not string %} with {{ c.barber.display_name }}{% endif %}"
-                                 {% if c.start == t %}checked{% endif %}>
-                          <span class="slot slot-free slot-chip" style="--i: {{ loop.index0 }}">{{ t.strftime("%H:%M") }}</span>
-                        </label>
-                      {% endfor %}
-                    </div>
-                  </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-        </section>
+        {{ time_step(c, shop, 3) }}
       {% endif %}
 
       {# 4. Details #}

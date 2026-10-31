@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "booking/_steps.html" import step_title, barber_step, time_step %}
+
+{# Used by guests (public=True, through their private link) and by the shop. #}
+
+{% block title %}Move booking · {{ shop.name }}{% endblock %}
+
+{% block head_scripts %}
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+{% endblock %}
+
+{% block nav %}{% if not public %}{{ super() }}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-enter">
+  <div>
+    <a href="{{ back_url }}" class="btn-link -ml-2 text-sm text-taupe">Back to the booking</a>
+    <h1 class="mt-2 font-display text-5xl font-extrabold">Move {{ "your" if public else a.guest_name ~ "'s" }} booking</h1>
+    <p class="mt-2 text-taupe">
+      Now: {{ a.service.name }}, {{ start.strftime("%A") }} {{ start.day }} {{ start.strftime("%B") }} at {{ start.strftime("%H:%M") }} with {{ a.member.display_name }}.
+    </p>
+  </div>
+
+  <form method="post" action="{{ form_url }}" novalidate
+        hx-get="{{ form_url }}"
+        hx-trigger="change[target.matches('[data-refresh]')]"
+        hx-params="barber,day,start"
+        hx-target="#steps" hx-select="#steps" hx-swap="outerHTML"
+        hx-push-url="true">
+    {{ action_form.hidden_tag() }}
+    <div id="steps" class="mt-10 space-y-12">
+      {% if c.members | length > 1 %}
+        {{ barber_step(c, any, 1) }}
+      {% else %}
+        <input type="hidden" name="barber" value="{{ c.barber.id if c.barber is not string and c.barber else '' }}">
+      {% endif %}
+
+      {% if c.barber %}
+        {{ time_step(c, shop, 2 if c.members | length > 1 else 1, verb="Move to") }}
+      {% endif %}
+
+      {% if c.day %}
+        <section {% if c.start %}data-focus{% endif %} class="max-w-xl">
+          <button type="submit" class="btn btn-primary w-full text-lg" data-book-button data-loading-text="Moving…">
+            {% if c.start %}Move to {{ c.start.strftime("%H:%M") }}{% if c.barber is not string %} with {{ c.barber.display_name }}{% endif %}{% else %}Pick a new time above{% endif %}
+          </button>
+          <p class="mt-3 text-center text-sm text-taupe">The old time is freed as soon as you move.</p>
+        </section>
+      {% endif %}
+    </div>
+
+    <noscript>
+      <button type="submit" formmethod="get" formaction="{{ form_url }}" class="btn btn-quiet mt-8">Show times</button>
+    </noscript>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{# A booking's status as a small coloured label. #}
+{% macro status_pill(status) %}
+  {% set styles = {
+    "confirmed": ("Booked", "bg-mint text-mint-deep"),
+    "pending_payment": ("Awaiting deposit", "bg-brass/15 text-walnut"),
+    "completed": ("Completed", "bg-steam text-walnut"),
+    "no_show": ("No-show", "bg-oxblood/10 text-oxblood"),
+    "cancelled": ("Cancelled", "bg-steam text-taupe line-through"),
+  } %}
+  {% set label, style = styles.get(status, (status, "bg-steam text-taupe")) %}
+  <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold {{ style }}">{{ label }}</span>
+{% endmacro %}

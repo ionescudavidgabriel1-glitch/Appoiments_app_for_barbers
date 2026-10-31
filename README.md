@@ -61,4 +61,4 @@ Each build phase is released as a version (`v0.1.0` for phase 1, and so on) and 
 
 ## Status
 
-Phase 4 (booking) is done: guests book a service, barber and free time on the shop's page, with no double bookings. Next is phase 5 (management).
+Phase 5 (management) is done: a daily calendar for owners and barbers, cancel and reschedule for the shop and for guests, completed/no-show, and time off. Next is phase 6 (notifications).

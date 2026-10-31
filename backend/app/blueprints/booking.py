@@ -12,12 +12,16 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 from sqlalchemy import select
 
 from ..booking import (
+    CannotChange,
     SlotTaken,
     available_slots,
     bookable_members,
     bookable_services,
+    can_change,
+    cancel_booking,
     create_booking,
     days_with_slots,
+    reschedule_booking,
 )
 from ..extensions import db
 from ..forms import BookingDetailsForm
@@ -37,15 +41,19 @@ def shop_or_404(slug: str) -> Shop:
     return shop
 
 
-def read_choices(shop: Shop, values) -> dict:
+def read_choices(shop: Shop, values, service=None, members=None, ignore=None) -> dict:
     """Turn ?service=&barber=&day=&start= into objects, dropping anything invalid.
 
     Each step only counts if the steps before it are valid, so changing the
     service clears a time that no longer fits.
+
+    For rescheduling, `service` fixes the service, `members` limits the barbers
+    (a barber only moves their own bookings) and `ignore` is the booking being
+    moved, so its current time counts as free.
     """
     now = utcnow()
-    services = bookable_services(shop)
-    members = bookable_members(shop)
+    services = [service] if service else bookable_services(shop)
+    members = bookable_members(shop) if members is None else members
     choice = {
         "services": services,
         "members": members,
@@ -59,7 +67,10 @@ def read_choices(shop: Shop, values) -> dict:
         "start": None,
     }
 
-    choice["service"] = next((s for s in services if str(s.id) == values.get("service")), None)
+    if service:
+        choice["service"] = service
+    else:
+        choice["service"] = next((s for s in services if str(s.id) == values.get("service")), None)
     if choice["service"] is None:
         return choice
 
@@ -72,7 +83,7 @@ def read_choices(shop: Shop, values) -> dict:
             return choice
         choice["barber"], choice["candidates"] = member, [member]
 
-    choice["days"] = days_with_slots(shop, choice["service"], choice["candidates"], now)
+    choice["days"] = days_with_slots(shop, choice["service"], choice["candidates"], now, ignore)
     day = parse_date(values.get("day"))
     if day is None or not choice["days"].get(day):
         # Default to the first day with a free time.
@@ -81,12 +92,22 @@ def read_choices(shop: Shop, values) -> dict:
         return choice
     choice["day"] = day
 
-    choice["slots"] = available_slots(shop, choice["service"], choice["candidates"], day, now)
+    choice["slots"] = available_slots(
+        shop, choice["service"], choice["candidates"], day, now, ignore
+    )
     choice["slot_groups"] = group_by_part_of_day(choice["slots"])
     start = parse_time(values.get("start"))
     if start in choice["slots"]:
         choice["start"] = start
     return choice
+
+
+def reschedule_defaults(values, appointment: Appointment, shop: Shop, barber: str) -> dict:
+    """Start the reschedule page on the booking's own day and barber choice."""
+    values = dict(values.items())
+    values.setdefault("barber", barber)
+    values.setdefault("day", to_local(appointment.start_at, shop.timezone).date().isoformat())
+    return values
 
 
 def group_by_part_of_day(slots) -> list[tuple[str, list[time]]]:
@@ -156,10 +177,8 @@ def submit(slug):
     return redirect(url_for("booking.confirmation", slug=shop.slug, token=token, new=1))
 
 
-@bp.get("/<slug>/booking/<token>")
-def confirmation(slug, token):
-    """The guest's private page for their booking. The link is the only key."""
-    shop = shop_or_404(slug)
+def guest_appointment_or_404(shop: Shop, token: str) -> Appointment:
+    """The private link is the only key to a guest's booking."""
     appointment = db.session.scalar(
         select(Appointment).where(
             Appointment.manage_token_hash == hash_token(token), Appointment.shop_id == shop.id
@@ -167,15 +186,77 @@ def confirmation(slug, token):
     )
     if appointment is None:
         abort(404)
+    return appointment
+
+
+@bp.get("/<slug>/booking/<token>")
+def confirmation(slug, token):
+    shop = shop_or_404(slug)
+    appointment = guest_appointment_or_404(shop, token)
     start = to_local(appointment.start_at, shop.timezone)
     end = to_local(appointment.end_at, shop.timezone)
     return render_template(
         "booking/confirmation.html",
         shop=shop,
         appointment=appointment,
+        token=token,
         start=start,
         end=end,
         is_new=request.args.get("new") == "1",
         link=url_for("booking.confirmation", slug=shop.slug, token=token, _external=True),
         is_past=appointment.start_at < utcnow(),
+        can_change=can_change(appointment, utcnow()),
+    )
+
+
+@bp.post("/<slug>/booking/<token>/cancel")
+def guest_cancel(slug, token):
+    shop = shop_or_404(slug)
+    appointment = guest_appointment_or_404(shop, token)
+    try:
+        cancel_booking(appointment, utcnow())
+        flash("Your booking is cancelled. The time is free for someone else.", "success")
+    except CannotChange:
+        flash("This booking can't be cancelled online any more.", "error")
+    return redirect(url_for("booking.confirmation", slug=shop.slug, token=token))
+
+
+@bp.route("/<slug>/booking/<token>/reschedule", methods=["GET", "POST"])
+def guest_reschedule(slug, token):
+    shop = shop_or_404(slug)
+    a = guest_appointment_or_404(shop, token)
+    back = url_for("booking.confirmation", slug=shop.slug, token=token)
+    if not can_change(a, utcnow()):
+        flash("This booking can't be moved online any more.", "error")
+        return redirect(back)
+
+    values = request.form if request.method == "POST" else request.args
+    values = reschedule_defaults(values, a, shop, str(a.member_id))
+    c = read_choices(shop, values, service=a.service, ignore=a)
+
+    if request.method == "POST":
+        if c["start"] is None:
+            flash("Pick a new time first.", "error")
+        else:
+            try:
+                reschedule_booking(a, c["candidates"], c["day"], c["start"], utcnow())
+                flash("Your booking has moved. See you then!", "success")
+                return redirect(back)
+            except (SlotTaken, CannotChange):
+                flash("Sorry, that time was just taken. Please pick another one.", "error")
+                c = read_choices(shop, values, service=a.service, ignore=a)
+
+    start = to_local(a.start_at, shop.timezone)
+    end = to_local(a.end_at, shop.timezone)
+    return render_template(
+        "booking/reschedule.html",
+        shop=shop,
+        a=a,
+        c=c,
+        any=ANY_BARBER,
+        start=start,
+        end=end,
+        form_url=url_for("booking.guest_reschedule", slug=shop.slug, token=token),
+        back_url=back,
+        public=True,
     )
