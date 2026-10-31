@@ -1,4 +1,5 @@
-# Render Blueprint: the website, its PostgreSQL database and the reminders worker.
+# Render Blueprint: the website and its PostgreSQL database, both on free plans.
+# The reminders worker (flask reminders-worker) needs a paid plan, so it is not here yet.
 # In Render: New > Blueprint, then pick this repository. See "Deploy" in README.md.
 # Plans and prices change; check them in Render before applying.
 
@@ -9,7 +10,7 @@ databases:
     plan: free
 
 envVarGroups:
-  # Shared by the website and the worker. Both need the same SECRET_KEY,
+  # Kept as a group so a reminders worker can later share the same SECRET_KEY,
   # because booking links in reminder emails are built from it.
   - name: barbershop-shared
     envVars:
@@ -50,26 +51,3 @@ services:
       - key: MAIL_FROM
         sync: false
 
-  # Sends reminder emails 24 and 2 hours before appointments.
-  - type: worker
-    name: barbershop-reminders
-    runtime: python
-    plan: starter
-    buildCommand: pip install -r requirements.txt
-    startCommand: flask reminders-worker
-    envVars:
-      - fromGroup: barbershop-shared
-      - key: DATABASE_URL
-        fromDatabase:
-          name: barbershop-db
-          property: connectionString
-      - key: APP_BASE_URL
-        sync: false
-      - key: SMTP_HOST
-        sync: false
-      - key: SMTP_USERNAME
-        sync: false
-      - key: SMTP_PASSWORD
-        sync: false
-      - key: MAIL_FROM
-        sync: false

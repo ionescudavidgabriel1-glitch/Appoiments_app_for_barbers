@@ -59,17 +59,19 @@ ruff format .
 
 ## Deploy (Render)
 
-The repository includes `render.yaml`, a Render Blueprint with three parts: the website, a PostgreSQL database and the reminders worker.
+The repository includes `render.yaml`, a Render Blueprint with two parts on free plans: the website and a PostgreSQL database.
 
 1. Push `main` to GitHub.
 2. In Render, choose **New > Blueprint** and pick this repository.
 3. Render asks for the values marked `sync: false`:
    - `APP_BASE_URL`: the site's address, e.g. `https://barbershop-web.onrender.com` (you can fill it in after the first deploy shows the address, then redeploy).
    - `SMTP_HOST`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM`: the mail account. Leave them empty to start; emails then go to the log instead of being sent.
-4. Apply. Render builds with `pip install -r requirements.txt`, runs `flask db upgrade`, then starts gunicorn. `SECRET_KEY` is generated once and shared by the website and the worker.
+4. Apply. Render builds with `pip install -r requirements.txt`, runs `flask db upgrade`, then starts gunicorn. `SECRET_KEY` is generated once.
 5. Open the site and sign up as the first shop owner.
 
-Every push to `main` deploys again; migrations run on each deploy. Check Render's current plans and prices before applying: the Blueprint asks for a free web service and database and a paid background worker (reminders need an always-on process).
+Every push to `main` deploys again; migrations run on each deploy. Free plans have limits: the website sleeps after about 15 minutes without visitors (the next visit takes a minute to wake it), and the free database expires after a time set by Render; check Render's current terms.
+
+Reminder emails (24 and 2 hours before) need an always-on process, which Render only offers on paid plans, so the Blueprint leaves it out for now. Booking, change and cancellation emails still work. To turn reminders on later, add a paid Background Worker with the start command `flask reminders-worker`, the `barbershop-shared` env group, `DATABASE_URL` from `barbershop-db` and the same mail settings as the website.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs ruff and the tests on every push, runs migrations and tests on PostgreSQL, and checks that the built CSS is up to date.
 
