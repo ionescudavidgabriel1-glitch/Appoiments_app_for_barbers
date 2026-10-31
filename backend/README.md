@@ -81,6 +81,7 @@ No login. Guests never have accounts.
 - Service durations are multiples of 5 minutes, from 5 to 480.
 - Services and barbers are hidden, never deleted, because past appointments refer to them.
 - Working hours: each weekday has an optional first shift and an optional second shift after a break. Saving replaces all of the barber's rows.
+- Shifts never cross midnight. Ending at 00:00 means "until midnight" and is stored as `WorkingHours.END_OF_DAY` (23:59:59.999999), because the database requires start < end; the form shows it as 00:00 again. Hours after midnight go on the next weekday.
 - Invites: the raw token is shown to the owner once, right after creation (kept in the session for one page view); only its SHA-256 hash is stored. A link works once and expires after `INVITE_EXPIRY_DAYS` (7). Opening it either creates a barber account or, if logged in, adds the shop to the current account.
 
 ## Accounts and access

@@ -392,7 +392,9 @@ def test_owner_saves_hours_with_break(client, db, shop_setup):
     ("values", "message"),
     [
         (("09:00", "", "", ""), b"Fill in both times"),
-        (("18:00", "09:00", "", ""), b"End after it starts"),
+        (("09:00", "09:00", "", ""), b"End after it starts"),
+        (("22:53", "00:45", "", ""), b"This goes past midnight. End at 00:00"),
+        (("18:00", "00:00", "19:00", "20:00"), b"after the first one ends"),
         (("09:00", "13:00", "12:00", "18:00"), b"after the first one ends"),
         (("", "", "14:00", "18:00"), b"first shift first"),
     ],
@@ -404,6 +406,24 @@ def test_hours_validation(client, db, shop_setup, values, message):
     assert response.status_code == 200
     assert message in response.data
     assert db.session.scalars(select(WorkingHours)).all() == []
+
+
+def test_shift_can_run_until_midnight(client, db, shop_setup):
+    login(client)
+    url = f"/shops/fade-street/barbers/{shop_setup['member'].id}/hours"
+    # Monday until midnight, and the rest of the night on Tuesday.
+    response = client.post(
+        url, data=hours_data({0: ("18:00", "00:00", "", ""), 1: ("00:00", "00:45", "", "")})
+    )
+    assert response.headers["Location"] == "/shops/fade-street/"
+    rows = db.session.scalars(select(WorkingHours).order_by(WorkingHours.weekday)).all()
+    assert [(r.weekday, r.start_time, r.end_time) for r in rows] == [
+        (0, time(18), WorkingHours.END_OF_DAY),
+        (1, time(0), time(0, 45)),
+    ]
+    # The form shows the midnight end as 00:00 again.
+    page = client.get(url).get_data(as_text=True)
+    assert 'id="days-0-end1" name="days-0-end1" type="time" value="00:00"' in page
 
 
 def test_barber_edits_own_hours_but_not_others(client, db, shop_setup):

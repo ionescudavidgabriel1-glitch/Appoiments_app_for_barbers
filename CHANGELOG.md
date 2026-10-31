@@ -2,6 +2,12 @@
 
 Each build phase is released as one version. See "Versioning" in `CLAUDE.md`.
 
+## v0.4.1 - Shifts until midnight (2026-10-31)
+
+- Working hours can end at 00:00, meaning until midnight; customers can book the last slot before midnight.
+- A shift that crosses midnight now gets a clear message: end at 00:00 and add the rest to the next day (instead of "End after it starts").
+- Tests for midnight shifts in the hours form and the booking rules.
+
 ## v0.4.0 - Phase 4: Booking (2026-10-31)
 
 - Public booking page at `/s/<shop-address>`: choose a service, a barber or "Any barber", a day and a free time, then enter name, email and phone. No account needed.

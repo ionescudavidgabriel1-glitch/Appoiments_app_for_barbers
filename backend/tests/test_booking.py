@@ -73,6 +73,17 @@ def test_starts_fill_the_shift_on_the_grid(db, shop_setup):
     ]  # fmt: skip
 
 
+def test_shift_until_midnight_offers_the_last_half_hour(db, shop_setup):
+    add_hours(db, shop_setup["member"], 0, (time(23), WorkingHours.END_OF_DAY))
+    assert starts(shop_setup) == ["23:00", "23:15", "23:30"]
+    appointment, _ = book(shop_setup, time(23, 30))
+    # 23:30-00:00 local on Monday is 21:30-22:00 UTC.
+    assert (appointment.start_at, appointment.end_at) == (
+        datetime(2026, 11, 2, 21, 30),
+        datetime(2026, 11, 2, 22, 0),
+    )
+
+
 def test_no_starts_on_a_day_off(db, shop_setup):
     add_hours(db, shop_setup["member"], 0, (time(9), time(12)))
     assert starts(shop_setup, day=MONDAY + timedelta(days=1)) == []

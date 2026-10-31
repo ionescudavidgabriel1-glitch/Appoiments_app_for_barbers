@@ -19,7 +19,7 @@
       <a href="{{ url_for('shops.dashboard') }}" class="btn-link -ml-2 text-sm text-taupe">Dashboard</a>
     {% endif %}
     <h1 class="mt-2 font-display text-5xl font-extrabold">{{ member.display_name }}'s hours</h1>
-    <p class="mt-2 text-taupe">The usual week at {{ shop.name }}, in {{ shop.timezone.replace("_", " ") }} time. Leave a day empty for a day off. Add a second shift for a lunch break.</p>
+    <p class="mt-2 text-taupe">The usual week at {{ shop.name }}, in {{ shop.timezone.replace("_", " ") }} time. Leave a day empty for a day off. Add a second shift for a lunch break. To work until midnight, end at 00:00; hours after midnight go on the next day.</p>
   </div>
 
   <form method="post" class="mt-8 rounded-3xl border border-line bg-white p-4 sm:p-6" novalidate data-hours-form>

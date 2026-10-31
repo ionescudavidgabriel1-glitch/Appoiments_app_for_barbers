@@ -23,7 +23,7 @@ from sqlalchemy import select
 from ..catalog import hours_by_day, save_working_hours, slug_taken, to_cents, unique_slug
 from ..decorators import role_required
 from ..extensions import db
-from ..forms import ServiceForm, ShopForm, WorkingHoursForm
+from ..forms import ServiceForm, ShopForm, WorkingHoursForm, shown_end
 from ..models import Invite, Role, Service, Shop, ShopMember
 from ..security import generate_token, hash_token
 from ..timeutils import utcnow
@@ -257,7 +257,7 @@ def edit_hours(slug, member_id):
         for day_form, intervals in zip(form.days, hours_by_day(member), strict=True):
             for n, (start, end) in enumerate(intervals[:2], start=1):
                 day_form[f"start{n}"].data = start
-                day_form[f"end{n}"].data = end
+                day_form[f"end{n}"].data = shown_end(end)
 
     if form.validate_on_submit():
         save_working_hours(member, [day.form.intervals() for day in form.days])

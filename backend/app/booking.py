@@ -12,7 +12,15 @@ from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 
 from .extensions import db
-from .models import Appointment, AppointmentStatus, Service, Shop, ShopMember, TimeOff
+from .models import (
+    Appointment,
+    AppointmentStatus,
+    Service,
+    Shop,
+    ShopMember,
+    TimeOff,
+    WorkingHours,
+)
 from .security import generate_token, hash_token
 from .timeutils import to_local, to_utc
 
@@ -92,7 +100,10 @@ def free_starts(
         if shift.weekday != day.weekday():
             continue
         shift_start = datetime.combine(day, shift.start_time)
-        shift_end = datetime.combine(day, shift.end_time)
+        if shift.end_time == WorkingHours.END_OF_DAY:
+            shift_end = datetime.combine(day + timedelta(days=1), time())
+        else:
+            shift_end = datetime.combine(day, shift.end_time)
         minutes = shift_start.hour * 60 + shift_start.minute
         candidate = midnight + timedelta(minutes=-(-minutes // grid) * grid)  # round up to grid
 

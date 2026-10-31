@@ -105,7 +105,13 @@ class Service(db.Model):
 
 class WorkingHours(db.Model):
     """Weekly recurring hours in the shop's local time. Several rows per weekday
-    are allowed, which is how breaks are represented (e.g. 09-13 and 14-18)."""
+    are allowed, which is how breaks are represented (e.g. 09-13 and 14-18).
+
+    A shift that runs until midnight is stored with end_time END_OF_DAY, because
+    00:00 would be earlier than its start. Shifts never cross midnight; hours after
+    midnight belong to the next weekday's row."""
+
+    END_OF_DAY = time.max  # 23:59:59.999999, shown and entered as 00:00
 
     __tablename__ = "working_hours"
     __table_args__ = (

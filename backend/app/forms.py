@@ -1,3 +1,4 @@
+from datetime import time
 from zoneinfo import available_timezones
 
 from flask_wtf import FlaskForm
@@ -25,6 +26,8 @@ from wtforms.validators import (
     Regexp,
     ValidationError,
 )
+
+from .models import WorkingHours
 
 MIN_PASSWORD_LENGTH = 8
 VALID_EMAIL = "Enter an email like name@example.com."
@@ -182,27 +185,42 @@ class DayHoursForm(Form):
             return False
         ok = True
         for start, end in ((self.start1, self.end1), (self.start2, self.end2)):
-            if bool(start.data) != bool(end.data):
+            if (start.data is None) != (end.data is None):
                 end.errors.append("Fill in both times, or leave both empty.")
                 ok = False
-            elif start.data and end.data <= start.data:
-                end.errors.append("End after it starts.")
+            elif start.data is not None and stored_end(end.data) <= start.data:
+                if end.data < start.data:
+                    end.errors.append(
+                        "This goes past midnight. End at 00:00 and add the rest to the next day."
+                    )
+                else:
+                    end.errors.append("End after it starts.")
                 ok = False
-        if ok and self.start2.data:
-            if not self.start1.data:
+        if ok and self.start2.data is not None:
+            if self.start1.data is None:
                 self.start2.errors.append("Fill in the first shift first.")
                 ok = False
-            elif self.start2.data < self.end1.data:
+            elif self.start2.data < stored_end(self.end1.data):
                 self.start2.errors.append("Start the second shift after the first one ends.")
                 ok = False
         return ok
 
     def intervals(self):
         return [
-            (start.data, end.data)
+            (start.data, stored_end(end.data))
             for start, end in ((self.start1, self.end1), (self.start2, self.end2))
-            if start.data
+            if start.data is not None
         ]
+
+
+def stored_end(end: time) -> time:
+    """An end time of 00:00 means "until midnight"."""
+    return WorkingHours.END_OF_DAY if end == time(0) else end
+
+
+def shown_end(end: time) -> time:
+    """How a stored end time appears in the form: midnight as 00:00."""
+    return time(0) if end == WorkingHours.END_OF_DAY else end
 
 
 class WorkingHoursForm(FlaskForm):
