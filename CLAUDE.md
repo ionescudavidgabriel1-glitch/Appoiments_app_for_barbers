@@ -6,17 +6,28 @@ Guidance for Claude when working in this repository.
 
 **Appoiments_app_for_barbers** is a web app where customers book appointments at a barbershop, and the shop manages its barbers, services and schedules.
 
-Status: early planning. The repo has only the initial README. No stack or structure has been decided yet.
+Status: phase 1 (foundation) is done. Next is phase 2 (accounts).
 
-## Planned stack (proposed, not yet confirmed)
+## Stack (confirmed)
 
-- Backend: Python with Flask (Django is the alternative)
+- Backend: Python with Flask, organized with an app factory and blueprints (auth, booking, admin)
 - Database: SQLite in development, PostgreSQL in production, via SQLAlchemy
-- Frontend: Jinja templates with Tailwind CSS
-- Auth: email and password, with roles for customer, barber and admin
-- Tests: pytest
+- Migrations: Flask-Migrate (Alembic)
+- Auth: Flask-Login with hashed passwords (Werkzeug); roles for owner and barber (customers have no account)
+- Forms and CSRF: Flask-WTF
+- Frontend: server-rendered Jinja templates with Tailwind CSS; HTMX only where slot selection needs partial updates
+- Booking rules: plain Python in a service module, no scheduling library
+- Notifications: SMTP email; APScheduler for reminders later
+- Tests: pytest with the Flask test client; Playwright (webapp-testing skill) for page-level checks
+- Config: environment variables, loaded with python-dotenv
+- Dependencies: virtual environment and requirements.txt
+- Lint and format: ruff
+- Deployment: Render or Railway, served with gunicorn; PostgreSQL in production
 
-Confirm these choices with the user before building on them.
+Product decisions (confirmed):
+- Several shops. Each shop has a public booking page at `/s/<shop-slug>`.
+- Customers book as guests, with no account, and manage a booking through a private link.
+- Payments: a shop can optionally require a deposit (Stripe). Unpaid deposit bookings hold their slot for a limited time.
 
 ## Build phases
 
@@ -60,10 +71,25 @@ Rules:
 - Before destructive git operations (force push, reset, deleting files), confirm with the user.
 - Commit messages: short imperative subject, plus a body when the reason isn't obvious.
 
+## Versioning
+
+Each finished build phase is one version:
+
+- Phase N is released as `v0.N.0` (phase 1 = `v0.1.0`). Phase 7 (polish and deploy) is `v1.0.0`.
+- Fixes to a released phase bump the patch number, e.g. `v0.1.1`.
+- Work on each phase happens on a branch named `phase-N-<name>`, e.g. `phase-2-accounts`.
+- When a phase is finished and its tests pass:
+  1. Set `version` in `pyproject.toml`.
+  2. Add an entry to `CHANGELOG.md`.
+  3. Commit, then create an annotated tag: `git tag -a v0.N.0 -m "Phase N: <name>"`.
+- Merge the phase branch into `main`, and push the branch or tags only when the user asks.
+
 ## Commands
 
-Add these once the project is set up:
+Run these from the repository root with the `.venv` virtual environment active:
 
-- Install dependencies: _TBD_
-- Run the app: _TBD_
-- Run tests: _TBD_
+- Install dependencies: `pip install -r requirements-dev.txt`
+- Apply migrations: `flask db upgrade` (create a new one with `flask db migrate -m "..."`)
+- Run the app: `flask run`
+- Run tests: `pytest`
+- Lint and format: `ruff check .` and `ruff format .`
