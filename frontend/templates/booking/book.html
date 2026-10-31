@@ -5,7 +5,7 @@
 {% block title %}Book at {{ shop.name }}{% endblock %}
 
 {% block head_scripts %}
-  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+  <script src="{{ url_for('static', filename='vendor/htmx-2.0.4.min.js') }}" defer></script>
 {% endblock %}
 
 {# Guests don't need the owner/barber login links. #}
@@ -31,7 +31,7 @@
   {% else %}
   <form method="post" action="{{ url_for('booking.submit', slug=shop.slug) }}" novalidate
         hx-get="{{ url_for('booking.book', slug=shop.slug) }}"
-        hx-trigger="change[target.matches('[data-refresh]')]"
+        hx-trigger="refresh"
         hx-params="service,barber,day,start"
         hx-target="#steps" hx-select="#steps" hx-swap="outerHTML"
         hx-push-url="true">

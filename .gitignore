@@ -23,3 +23,6 @@ htmlcov/
 .idea/
 Thumbs.db
 .DS_Store
+
+# Node (only used to build the CSS)
+node_modules/

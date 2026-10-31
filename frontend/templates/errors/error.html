@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} · Barbershop Appointments{% endblock %}
+
+{% block content %}
+<div class="page-enter mx-auto max-w-xl">
+  <div class="ledger">
+    <div class="flex items-start justify-between gap-4 pb-3">
+      <p class="font-display text-2xl font-extrabold text-taupe">Error {{ code }}</p>
+      <span class="stamp text-oxblood">{{ "Not found" if code == 404 else "Oops" }}</span>
+    </div>
+    <div class="ledger-row !grid-cols-1 py-4">
+      <h1 class="font-display text-4xl font-extrabold leading-tight sm:text-5xl">{{ title }}</h1>
+      <p class="mt-2 text-taupe">{{ message }}</p>
+    </div>
+  </div>
+  <div class="mt-8 flex flex-wrap gap-3">
+    <a href="{{ url_for('main.home') }}" class="btn btn-primary">Go to the home page</a>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('shops.dashboard') }}" class="btn btn-quiet">Your dashboard</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -23,7 +23,7 @@ from ..booking import (
     days_with_slots,
     reschedule_booking,
 )
-from ..extensions import db
+from ..extensions import db, limiter
 from ..forms import BookingDetailsForm
 from ..models import Appointment, Shop
 from ..notifications import notify_booked, notify_cancelled, notify_moved
@@ -140,6 +140,7 @@ def book(slug):
 
 
 @bp.post("/<slug>/")
+@limiter.limit("20 per hour")
 def submit(slug):
     shop = shop_or_404(slug)
     choice = read_choices(shop, request.form)

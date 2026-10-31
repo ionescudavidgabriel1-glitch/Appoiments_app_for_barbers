@@ -48,6 +48,20 @@ class Config:
     # The interface is English for now; emails use each shop's language.
     BABEL_DEFAULT_LOCALE = "en"
 
+    # Cookies are not sent along when another site links or posts here.
+    SESSION_COOKIE_SAMESITE = "Lax"
+    REMEMBER_COOKIE_SAMESITE = "Lax"
+    REMEMBER_COOKIE_HTTPONLY = True
+
+    # Limits on login, sign-up and booking attempts, counted per visitor IP.
+    # In-memory counters are per process; fine for one web instance.
+    RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
+    RATELIMIT_HEADERS_ENABLED = True
+
+    # Production runs behind Render's proxy over HTTPS (see ProductionConfig).
+    TRUST_PROXY = False
+    HSTS = False
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -55,14 +69,21 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = "sqlite://"
+    # CI also runs the tests on PostgreSQL by setting TEST_DATABASE_URL.
+    SQLALCHEMY_DATABASE_URI = os.environ.get("TEST_DATABASE_URL", "sqlite://")
     WTF_CSRF_ENABLED = False
     MAIL_BACKEND = "memory"
 
 
 class ProductionConfig(Config):
+    DEBUG = False  # even though .flaskenv sets FLASK_DEBUG=1 for local flask commands
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
+    PREFERRED_URL_SCHEME = "https"
+    # Without SMTP, emails go to the log: the host's disk is wiped on each deploy.
+    MAIL_BACKEND = os.environ.get("MAIL_BACKEND") or ("smtp" if Config.SMTP_HOST else "console")
+    TRUST_PROXY = _env_bool("TRUST_PROXY", True)
+    HSTS = True
 
     @classmethod
     def validate(cls):

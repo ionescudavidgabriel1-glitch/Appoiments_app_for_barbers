@@ -1,0 +1,13 @@
+{
+  "name": "barbershop-appointments-css",
+  "private": true,
+  "description": "Builds frontend/static/css/tailwind.css. Only needed when templates change.",
+  "scripts": {
+    "build:css": "tailwindcss -i frontend/tailwind.input.css -o frontend/static/css/tailwind.css --minify",
+    "watch:css": "tailwindcss -i frontend/tailwind.input.css -o frontend/static/css/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "htmx.org": "^2.0.4",
+    "tailwindcss": "3.4.17"
+  }
+}

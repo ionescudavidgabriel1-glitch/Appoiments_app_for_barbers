@@ -2,12 +2,14 @@ import pytest
 
 from app import create_app
 from app.extensions import db as _db
+from app.extensions import limiter
 from app.models import Role, Service, Shop, ShopMember, User
 
 
 @pytest.fixture
 def app():
     app = create_app("testing")
+    limiter.reset()  # limits are on in tests too; every test starts with fresh counters
     with app.app_context():
         _db.create_all()
         yield app

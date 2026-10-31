@@ -16,6 +16,7 @@ backend/
     booking.py       booking rules: free start times, creating, moving and cancelling bookings
     notifications.py emails about bookings, and reminders
     commands.py      flask send-reminders and flask reminders-worker
+    web.py           security headers, error pages, proxy handling, logging
     translations/    Romanian catalog for emails (messages.po, compiled to messages.mo)
     decorators.py    role_required: limits a view to certain roles
     security.py      tokens for invite and booking links (stored as SHA-256 hashes)
@@ -139,6 +140,15 @@ Database rules:
 - A partial unique index stops two active bookings (`pending_payment` or `confirmed`) from starting at the same time with the same barber. The booking service (phase 4) will reject overlapping times.
 - Foreign keys are enforced on SQLite too. They are switched off only while migrations run.
 
+## Security and errors (`app/web.py`)
+
+- Every response gets a Content Security Policy that allows only the app's own scripts (no inline scripts, no `eval`; HTMX runs with `allowEval: false`), plus `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: same-origin`, so private booking links are never sent to other sites (for example Google Fonts).
+- Pages for logged-in users and guests' booking links are sent with `Cache-Control: no-store`.
+- Production: secure, `SameSite=Lax` cookies; HSTS; `ProxyFix` trusts one proxy (Render), so visitor IPs and `https` links are right; logs go to standard output.
+- Limits per visitor IP (Flask-Limiter, in memory, so run one web process): login 10 per minute and 50 per hour, sign-up 10 per hour, invite sign-up 20 per hour, booking 20 per hour. Only POSTs count. Over the limit gives a friendly 429 page.
+- Friendly error pages for 400 (including an expired form), 403, 404, 405, 429 and 500, from `frontend/templates/errors/error.html`.
+- `GET /healthz` answers `{"status": "ok"}` when the app runs and the database answers; Render uses it as the health check.
+
 ## Emails and reminders (`app/notifications.py`)
 
 | Event | Guest | Barber |
@@ -194,4 +204,4 @@ Review each generated file in `migrations/versions/` before committing it.
 pytest
 ```
 
-Tests use an in-memory SQLite database (`TestingConfig`) with CSRF disabled. Fixtures live in `tests/conftest.py`.
+Tests use an in-memory SQLite database (`TestingConfig`) with CSRF disabled; set `TEST_DATABASE_URL` to run them on PostgreSQL (CI does). Rate limits stay on, with counters reset before each test. Fixtures live in `tests/conftest.py`.

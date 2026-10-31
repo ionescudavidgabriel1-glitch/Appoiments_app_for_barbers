@@ -6,7 +6,7 @@ Guidance for Claude when working in this repository.
 
 **Appoiments_app_for_barbers** is a web app where customers book appointments at a barbershop, and the shop manages its barbers, services and schedules.
 
-Status: phase 6 (notifications) is done. Next: translating the interface (language switcher), then phase 7 (polish and deploy). Deposits (Stripe) are decided but not yet placed in a phase; bookings are confirmed without payment for now. Follow the design system in `frontend/README.md` for new pages, and use the frontend-design skill for UI work.
+Status: all phases are done (v1.0.0). Next: translating the interface into Romanian with a language switcher (v1.1). Deposits (Stripe) are decided but not scheduled. Deposits (Stripe) are decided but not yet placed in a phase; bookings are confirmed without payment for now. Follow the design system in `frontend/README.md` for new pages, and use the frontend-design skill for UI work.
 
 ## Stack (confirmed)
 
@@ -98,3 +98,5 @@ Run these from the repository root with the `.venv` virtual environment active:
 - Run the app: `flask run`
 - Run tests: `pytest`
 - Lint and format: `ruff check .` and `ruff format .`
+- Rebuild the CSS after changing template classes: `npm run build:css` (commit `frontend/static/css/tailwind.css`)
+- Send due reminders: `flask send-reminders` (once) or `flask reminders-worker` (keeps running)

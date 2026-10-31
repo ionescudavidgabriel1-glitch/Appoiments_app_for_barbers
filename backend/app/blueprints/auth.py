@@ -10,7 +10,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import select
 
-from ..extensions import db
+from ..extensions import db, limiter
 from ..forms import ActionForm, LoginForm, SignupForm
 from ..models import Invite, Role, ShopMember, User
 from ..security import hash_token
@@ -32,6 +32,7 @@ def is_safe_next(target: str | None) -> bool:
 
 
 @bp.route("/signup", methods=["GET", "POST"])
+@limiter.limit("10 per hour", methods=["POST"])
 def signup():
     if current_user.is_authenticated:
         return redirect(url_for("shops.dashboard"))
@@ -54,6 +55,7 @@ def signup():
 
 
 @bp.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute; 50 per hour", methods=["POST"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("shops.dashboard"))
@@ -98,6 +100,7 @@ def join_shop(user: User, invite: Invite) -> None:
 
 
 @bp.route("/invite/<token>", methods=["GET", "POST"])
+@limiter.limit("20 per hour", methods=["POST"])
 def accept_invite(token):
     invite = usable_invite_or_none(token)
     if invite is None:

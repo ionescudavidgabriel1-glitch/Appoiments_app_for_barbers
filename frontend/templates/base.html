@@ -4,34 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Barbershop Appointments{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  {# HTMX must not evaluate code from attributes; the Content Security Policy forbids it anyway. #}
+  <meta name="htmx-config" content='{"allowEval": false, "includeIndicatorStyles": false}'>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
-  {# Development only: the Play CDN compiles Tailwind in the browser. Replace with a built stylesheet before deploying (phase 7). #}
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            towel: "#FAF6F1",
-            walnut: "#3A2A22",
-            oxblood: { DEFAULT: "#7A1F2B", dark: "#5A1520" },
-            mint: { DEFAULT: "#BFE3D5", deep: "#245746" },
-            brass: "#B7843A",
-            taupe: "#6F625A",
-            line: "#E8DFD5",
-            steam: "#F1EAE2",
-          },
-          fontFamily: {
-            display: ['"Big Shoulders Display"', "sans-serif"],
-            sans: ["Figtree", "system-ui", "sans-serif"],
-          },
-        },
-      },
-    };
-  </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  {# Built from tailwind.config.js with: npm run build:css. Loaded after app.css, so
+     utility classes (text-brass, text-3xl...) override component styles. #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
   <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
   {% block head_scripts %}{% endblock %}
 </head>

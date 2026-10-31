@@ -24,7 +24,7 @@
         <a href="{{ url_for('calendar.day_view', slug=shop.slug, day=next_day.isoformat()) }}" class="btn btn-quiet !px-3" aria-label="Next day">&rarr;</a>
         <form method="get" class="flex gap-2">
           <label for="jump" class="sr-only">Go to date</label>
-          <input id="jump" type="date" name="day" value="{{ day.isoformat() }}" class="input !w-auto !py-2" onchange="this.form.submit()">
+          <input id="jump" type="date" name="day" value="{{ day.isoformat() }}" class="input !w-auto !py-2" data-autosubmit>
         </form>
       </nav>
     </div>

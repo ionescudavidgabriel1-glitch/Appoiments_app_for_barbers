@@ -32,6 +32,15 @@ flask run
 
 Open http://127.0.0.1:5000. The `flask` command picks up `FLASK_APP` from `.flaskenv` and secrets from `.env`.
 
+## Styles
+
+The CSS is prebuilt and committed (`frontend/static/css/tailwind.css`), so running the app needs no Node.js. After changing classes in templates, rebuild it (needs Node.js):
+
+```bash
+npm install
+npm run build:css      # or: npm run watch:css while editing
+```
+
 ## Reminder emails
 
 Reminders are sent by a separate process. In a second terminal:
@@ -48,6 +57,22 @@ ruff check .
 ruff format .
 ```
 
+## Deploy (Render)
+
+The repository includes `render.yaml`, a Render Blueprint with three parts: the website, a PostgreSQL database and the reminders worker.
+
+1. Push `main` to GitHub.
+2. In Render, choose **New > Blueprint** and pick this repository.
+3. Render asks for the values marked `sync: false`:
+   - `APP_BASE_URL`: the site's address, e.g. `https://barbershop-web.onrender.com` (you can fill it in after the first deploy shows the address, then redeploy).
+   - `SMTP_HOST`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM`: the mail account. Leave them empty to start; emails then go to the log instead of being sent.
+4. Apply. Render builds with `pip install -r requirements.txt`, runs `flask db upgrade`, then starts gunicorn. `SECRET_KEY` is generated once and shared by the website and the worker.
+5. Open the site and sign up as the first shop owner.
+
+Every push to `main` deploys again; migrations run on each deploy. Check Render's current plans and prices before applying: the Blueprint asks for a free web service and database and a paid background worker (reminders need an always-on process).
+
+GitHub Actions (`.github/workflows/ci.yml`) runs ruff and the tests on every push, runs migrations and tests on PostgreSQL, and checks that the built CSS is up to date.
+
 ## Configuration
 
 Settings come from environment variables (see `.env.example`):
@@ -58,6 +83,7 @@ Settings come from environment variables (see `.env.example`):
 | `SECRET_KEY` | Session signing key. Required in production. |
 | `DATABASE_URL` | Database URL. Defaults to SQLite in `backend/instance/`. |
 | `APP_BASE_URL` | Where the app is reachable; used for links in reminder emails. |
+| `TRUST_PROXY` | Production only, default on: trust the host's proxy headers (Render). |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_USE_TLS`, `MAIL_FROM` | Sending email. Leave `SMTP_HOST` empty in development: emails are saved to `backend/instance/outbox/`. |
 
 ## Project layout
@@ -71,4 +97,4 @@ Each build phase is released as a version (`v0.1.0` for phase 1, and so on) and 
 
 ## Status
 
-Phase 6 (notifications) is done: booking, change and cancellation emails to guests and barbers, reminders 24 and 2 hours before, in Romanian or English per shop. Next: translating the interface, then phase 7 (polish and deploy).
+Version 1.0: all seven phases are done and the app is ready to deploy on Render. Next: translating the interface into Romanian with a language switcher (v1.1).

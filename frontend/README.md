@@ -6,6 +6,7 @@ Server-rendered Jinja templates served by the Flask app in `backend/`. There is 
 
 ```
 frontend/
+  tailwind.input.css   source for the Tailwind build
   templates/
     base.html            layout: header with login/logout links, flash messages, footer
     _form.html           macros for form fields and submit buttons
@@ -28,8 +29,12 @@ frontend/
     calendar/_status.html status_pill macro (Booked, Completed, No-show...)
     email/booking.html   the one email layout (inline styles for mail apps)
     email/booking.txt    its plain-text version
+    errors/error.html    friendly error pages (404, 500...)
   static/
     css/app.css      design tokens and components (buttons, inputs, ledger, animations)
+    css/tailwind.css built Tailwind utilities (do not edit; run npm run build:css)
+    vendor/          HTMX 2.0.4, served by the app
+    favicon.svg      the barber pole
     js/app.js        small interactions (see "Interactions")
 ```
 
@@ -125,6 +130,10 @@ Playwright is in `requirements-dev.txt`. After `python -m playwright install chr
 
 ## Styling
 
-Tailwind CSS currently loads from the Play CDN in `base.html`, with the colors and fonts above registered in `tailwind.config`. The CDN is for development only. Replace it with a stylesheet built by the Tailwind CLI before deploying (phase 7). HTMX (2.0.4, from unpkg) is loaded only on the booking page through the `head_scripts` block. The booking form has `hx-get` on itself: changing a radio marked `data-refresh` reloads the page with the choices in the URL and swaps only `#steps`. Without JavaScript, a "Show times" button does the same with a normal page load.
+Tailwind CSS 3.4.17 is built ahead of time into `static/css/tailwind.css` from `tailwind.config.js` (which holds the color and font tokens) and `tailwind.input.css`. It scans the templates and `app.js` for class names. After adding new classes, run `npm run build:css` and commit the result; CI fails if the file is out of date. `app.css` loads first and `tailwind.css` second, so utility classes override component styles.
+
+No page may use inline scripts or event attributes (`onclick=` and so on): the Content Security Policy blocks them. Put behaviour in `static/js/app.js`, triggered by `data-` attributes.
+
+HTMX 2.0.4 is served from `static/vendor/` and loaded only on the booking and reschedule pages through the `head_scripts` block. The form carries `hx-get` with `hx-trigger="refresh"`; `app.js` triggers `refresh` when a radio marked `data-refresh` changes, which reloads the page with the choices in the URL and swaps only `#steps`. Without JavaScript, a "Show times" button does the same with a normal page load.
 
 Public pages for guests override the `nav` block to hide the owner and barber login links.

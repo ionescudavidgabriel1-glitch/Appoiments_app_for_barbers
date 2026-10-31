@@ -1,0 +1,75 @@
+# Render Blueprint: the website, its PostgreSQL database and the reminders worker.
+# In Render: New > Blueprint, then pick this repository. See "Deploy" in README.md.
+# Plans and prices change; check them in Render before applying.
+
+databases:
+  - name: barbershop-db
+    databaseName: barbershop
+    user: barbershop
+    plan: free
+
+envVarGroups:
+  # Shared by the website and the worker. Both need the same SECRET_KEY,
+  # because booking links in reminder emails are built from it.
+  - name: barbershop-shared
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: FLASK_DEBUG # .flaskenv turns it on for local development
+        value: "0"
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: SECRET_KEY
+        generateValue: true
+
+services:
+  - type: web
+    name: barbershop-web
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # Migrations run before the server starts, on every deploy.
+    # One process with threads, so login limits are counted in one place.
+    startCommand: flask db upgrade && gunicorn --chdir backend --bind 0.0.0.0:$PORT --workers 1 --threads 4 --access-logfile - wsgi:app
+    healthCheckPath: /healthz
+    envVars:
+      - fromGroup: barbershop-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: barbershop-db
+          property: connectionString
+      # Asked for when the Blueprint is applied:
+      - key: APP_BASE_URL # e.g. https://barbershop-web.onrender.com
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+
+  # Sends reminder emails 24 and 2 hours before appointments.
+  - type: worker
+    name: barbershop-reminders
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: flask reminders-worker
+    envVars:
+      - fromGroup: barbershop-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: barbershop-db
+          property: connectionString
+      - key: APP_BASE_URL
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false

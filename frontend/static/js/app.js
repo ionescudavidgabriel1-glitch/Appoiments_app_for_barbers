@@ -99,3 +99,16 @@ document.addEventListener("htmx:afterSwap", () => {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   next.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
 });
+
+// Booking pages: a changed choice asks the form to reload the steps (hx-trigger="refresh").
+document.addEventListener("change", (event) => {
+  const form = event.target.form;
+  if (form && event.target.matches("[data-refresh]") && window.htmx) {
+    window.htmx.trigger(form, "refresh");
+  }
+});
+
+// Inputs marked data-autosubmit send their form as soon as they change (calendar date).
+document.addEventListener("change", (event) => {
+  if (event.target.matches("[data-autosubmit]")) event.target.form.requestSubmit();
+});

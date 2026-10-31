@@ -2,6 +2,18 @@
 
 Each build phase is released as one version. See "Versioning" in `CLAUDE.md`.
 
+## v1.0.0 - Phase 7: Polish and deploy (2026-11-01)
+
+- Tailwind CSS built ahead of time into one small stylesheet (`npm run build:css`) instead of compiling in the browser; HTMX served by the app.
+- Security headers on every page, including a strict Content Security Policy (only the app's own scripts); no inline scripts left. Private pages are never cached, and private booking links are never sent to other sites.
+- Limits on login, sign-up and booking attempts, with a friendly "slow down" page.
+- Friendly error pages for not found, not allowed, expired forms and server errors.
+- Production: HTTPS-only cookies, HSTS, correct visitor IPs and https links behind Render's proxy, logs to standard output, emails logged when no mail server is set.
+- `/healthz` health check, favicon.
+- Render Blueprint (`render.yaml`): website, PostgreSQL and the reminders worker, with migrations on every deploy.
+- GitHub Actions: lint and tests on every push, migrations and tests on PostgreSQL, and a check that the built CSS is up to date.
+- Deploy guide in the README.
+
 ## v0.6.0 - Phase 6: Notifications (2026-10-31)
 
 - Emails to guests: booking confirmation with the private link, moved, cancelled, and reminders 24 hours and 2 hours before.
