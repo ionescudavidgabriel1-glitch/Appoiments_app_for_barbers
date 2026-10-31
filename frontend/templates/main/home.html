@@ -10,6 +10,9 @@
   <p class="mt-2 text-lg text-stone-600">
     Owners manage services, barbers and working hours in one place.
   </p>
+  {% if not current_user.is_authenticated %}
+    <a href="{{ url_for('auth.signup') }}" class="mt-6 inline-block rounded bg-stone-900 px-5 py-2.5 font-medium text-white hover:bg-stone-700">Create your shop account</a>
+  {% endif %}
 </section>
 
 <section class="mt-12 grid gap-6 sm:grid-cols-3">

@@ -60,4 +60,4 @@ Each build phase is released as a version (`v0.1.0` for phase 1, and so on) and 
 
 ## Status
 
-Phase 1 (foundation) is done: project structure, config, data models, the initial migration and the home page. Next is phase 2 (accounts).
+Phase 2 (accounts) is done: owner sign up, login, logout and role-based access. Next is phase 3 (catalog).

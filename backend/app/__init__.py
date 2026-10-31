@@ -5,6 +5,7 @@ from flask import Flask
 
 from .config import CONFIGS
 from .extensions import csrf, db, login_manager, migrate
+from .forms import LogoutForm
 from .timeutils import utcnow
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -48,6 +49,6 @@ def create_app(env: str | None = None) -> Flask:
 
     @app.context_processor
     def inject_globals():
-        return {"now_year": utcnow().year}
+        return {"now_year": utcnow().year, "logout_form": LogoutForm()}
 
     return app

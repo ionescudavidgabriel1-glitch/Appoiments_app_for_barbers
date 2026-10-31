@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_form.html" import field, submit %}
+
+{% block title %}Log in · Barbershop Appointments{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-sm">
+  <h1 class="text-2xl font-bold">Log in</h1>
+
+  <form method="post" class="mt-6" novalidate>
+    {{ form.hidden_tag() }}
+    {{ field(form.email, autocomplete="email") }}
+    {{ field(form.password, autocomplete="current-password") }}
+    {{ field(form.remember) }}
+    {{ submit("Log in") }}
+  </form>
+
+  <p class="mt-4 text-sm text-stone-600">
+    New shop owner? <a href="{{ url_for('auth.signup') }}" class="font-medium underline">Create an account</a>
+  </p>
+</div>
+{% endblock %}

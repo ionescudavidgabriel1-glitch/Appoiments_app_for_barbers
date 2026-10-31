@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · Barbershop Appointments{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold">Hello, {{ current_user.name }}</h1>
+
+{% if current_user.is_owner %}
+  <section class="mt-6">
+    <h2 class="text-lg font-semibold">Your shops</h2>
+    {% if current_user.owned_shops %}
+      <ul class="mt-2 divide-y divide-stone-200 rounded border border-stone-200 bg-white">
+        {% for shop in current_user.owned_shops %}
+          <li class="px-4 py-3">{{ shop.name }} <span class="text-sm text-stone-500">/s/{{ shop.slug }}</span></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="mt-2 text-stone-600">You don't have a shop yet. Shop setup is coming soon.</p>
+    {% endif %}
+  </section>
+{% endif %}
+
+<section class="mt-6">
+  <h2 class="text-lg font-semibold">Shops you work at</h2>
+  {% if current_user.memberships %}
+    <ul class="mt-2 divide-y divide-stone-200 rounded border border-stone-200 bg-white">
+      {% for m in current_user.memberships %}
+        <li class="px-4 py-3">{{ m.shop.name }}{% if not m.active %} <span class="text-sm text-stone-500">(inactive)</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="mt-2 text-stone-600">You aren't listed as a barber at any shop.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,22 @@
+{# Form helpers. Import with: {% from "_form.html" import field, submit %} #}
+
+{% macro field(f, type=None) %}
+  <div class="mb-4">
+    {% if f.type == "BooleanField" %}
+      <label class="flex items-center gap-2 text-sm">
+        {{ f(class="h-4 w-4 rounded border-stone-300") }}
+        {{ f.label.text }}
+      </label>
+    {% else %}
+      {{ f.label(class="mb-1 block text-sm font-medium") }}
+      {{ f(class="block w-full rounded border px-3 py-2 " ~ ("border-red-400" if f.errors else "border-stone-300"), **kwargs) }}
+    {% endif %}
+    {% for error in f.errors %}
+      <p class="mt-1 text-sm text-red-700">{{ error }}</p>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro submit(label) %}
+  <button type="submit" class="w-full rounded bg-stone-900 px-4 py-2 font-medium text-white hover:bg-stone-700">{{ label }}</button>
+{% endmacro %}

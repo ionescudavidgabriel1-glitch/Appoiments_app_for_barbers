@@ -6,7 +6,7 @@ Guidance for Claude when working in this repository.
 
 **Appoiments_app_for_barbers** is a web app where customers book appointments at a barbershop, and the shop manages its barbers, services and schedules.
 
-Status: phase 1 (foundation) is done. Next is phase 2 (accounts).
+Status: phase 2 (accounts) is done. Next is phase 3 (catalog).
 
 ## Stack (confirmed)
 
@@ -44,6 +44,7 @@ Work one phase at a time. Finish and test a phase before starting the next.
 ## Conventions
 
 - Keep code simple and readable. Match the style of the surrounding code.
+- After each change, explain to the user in simple words every new file and every addition: what it does and how it fits into the codebase. The user is learning the codebase.
 - Write tests for booking logic, especially slot conflicts and time validation.
 - Never store secrets in the repo. Load them from environment variables, and keep `.env` out of git.
 - Add a `.gitignore` before the first commit that covers `__pycache__/`, `.venv/`, `.env` and local database files.
