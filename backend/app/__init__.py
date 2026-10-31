@@ -3,9 +3,10 @@ from pathlib import Path
 
 from flask import Flask
 
+from .catalog import format_money
 from .config import CONFIGS
 from .extensions import csrf, db, login_manager, migrate
-from .forms import LogoutForm
+from .forms import ActionForm
 from .timeutils import utcnow
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -49,6 +50,8 @@ def create_app(env: str | None = None) -> Flask:
 
     @app.context_processor
     def inject_globals():
-        return {"now_year": utcnow().year, "logout_form": LogoutForm()}
+        return {"now_year": utcnow().year, "action_form": ActionForm()}
+
+    app.jinja_env.filters["money"] = format_money
 
     return app

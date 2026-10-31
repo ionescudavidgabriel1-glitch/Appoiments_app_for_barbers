@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% from "_form.html" import post_button with context %}
+
+{% block title %}{{ shop.name }} · Barbershop Appointments{% endblock %}
+
+{% block content %}
+<div class="page-enter">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <a href="{{ url_for('shops.dashboard') }}" class="btn-link -ml-2 text-sm text-taupe">Dashboard</a>
+      <h1 class="mt-2 font-display text-5xl font-extrabold">{{ shop.name }}</h1>
+      <p class="mt-1 text-taupe">
+        Booking page: <span class="font-semibold text-walnut">/s/{{ shop.slug }}</span>
+        {% if shop.address %}<span class="block sm:inline sm:before:content-['_·_']">{{ shop.address }}</span>{% endif %}
+      </p>
+    </div>
+    <a href="{{ url_for('shops.edit_shop', slug=shop.slug) }}" class="btn btn-quiet">Shop settings</a>
+  </div>
+
+  {# Services #}
+  <section class="mt-12">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 class="font-display text-3xl font-extrabold">Services</h2>
+      <a href="{{ url_for('shops.create_service', slug=shop.slug) }}" class="btn btn-primary">Add a service</a>
+    </div>
+    {% if services %}
+      <ul class="mt-4">
+        {% for service in services %}
+          <li class="ledger-row !grid-cols-[4.5rem_1fr] {{ 'opacity-60' if not service.active }}">
+            <span class="ledger-time">{{ service.duration_min }} min</span>
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2.5">
+              <div>
+                <span class="text-lg font-semibold">{{ service.name }}</span>
+                <span class="ml-2 text-taupe">{{ service.price_cents | money(shop.currency) }}</span>
+                {% if not service.active %}<span class="ml-2 rounded-full bg-steam px-2 py-0.5 text-xs font-semibold text-taupe">Hidden</span>{% endif %}
+              </div>
+              <div class="flex gap-1">
+                <a href="{{ url_for('shops.edit_service', slug=shop.slug, service_id=service.id) }}" class="btn-link text-sm">Edit</a>
+                {{ post_button(url_for('shops.toggle_service', slug=shop.slug, service_id=service.id),
+                               "Show" if not service.active else "Hide", style="btn-link text-sm") }}
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="mt-4 max-w-xl rounded-3xl border-2 border-dashed border-mint-deep/30 bg-mint/30 p-6">
+        <p class="text-lg font-semibold text-mint-deep">No services yet</p>
+        <p class="mt-1 text-taupe">Add what you offer, like a haircut or a beard trim, with its price and how long it takes.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  {# Barbers #}
+  <section class="mt-14">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 class="font-display text-3xl font-extrabold">Barbers</h2>
+      <div class="flex flex-wrap gap-2">
+        {% if not owner_is_barber %}
+          {{ post_button(url_for('shops.add_owner_as_barber', slug=shop.slug), "I cut hair here too") }}
+        {% endif %}
+        {{ post_button(url_for('shops.create_invite', slug=shop.slug), "Invite a barber", style="btn btn-primary", loading="Creating link…") }}
+      </div>
+    </div>
+
+    {% if new_invite_link %}
+      <div class="flash mt-4 rounded-3xl border-2 border-brass/50 bg-brass/10 p-5">
+        <p class="font-semibold">Invite link ready. Send it to your barber.</p>
+        <p class="mt-1 text-sm text-taupe">It works once and expires in {{ config.INVITE_EXPIRY_DAYS }} days. For security it's only shown now, so copy it before leaving this page.</p>
+        <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input id="invite-link" class="input font-mono text-sm" value="{{ new_invite_link }}" readonly aria-label="Invite link">
+          <button type="button" class="btn btn-primary shrink-0" data-copy="invite-link">Copy link</button>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if members %}
+      <ul class="mt-4">
+        {% for member in members %}
+          {% set days_working = member.working_hours | map(attribute="weekday") | unique | list | length %}
+          <li class="ledger-row !grid-cols-[4.5rem_1fr] {{ 'opacity-60' if not member.active }}">
+            <span class="ledger-time">{{ days_working }} {{ "day" if days_working == 1 else "days" }}</span>
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2.5">
+              <div>
+                <span class="text-lg font-semibold">{{ member.display_name }}</span>
+                {% if member.user_id == current_user.id %}<span class="ml-1 text-taupe">(you)</span>{% endif %}
+                {% if not member.active %}
+                  <span class="ml-2 rounded-full bg-steam px-2 py-0.5 text-xs font-semibold text-taupe">Hidden</span>
+                {% elif days_working == 0 %}
+                  <span class="ml-2 rounded-full bg-oxblood/10 px-2 py-0.5 text-xs font-semibold text-oxblood">No hours set</span>
+                {% endif %}
+              </div>
+              <div class="flex gap-1">
+                <a href="{{ url_for('shops.edit_hours', slug=shop.slug, member_id=member.id) }}" class="btn-link text-sm">Working hours</a>
+                {{ post_button(url_for('shops.toggle_member', slug=shop.slug, member_id=member.id),
+                               "Show" if not member.active else "Hide", style="btn-link text-sm") }}
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% elif not new_invite_link %}
+      <div class="mt-4 max-w-xl rounded-3xl border-2 border-dashed border-mint-deep/30 bg-mint/30 p-6">
+        <p class="text-lg font-semibold text-mint-deep">No barbers yet</p>
+        <p class="mt-1 text-taupe">Invite the barbers who work here, or add yourself if you cut hair too.</p>
+      </div>
+    {% endif %}
+
+    {% if open_invites %}
+      <h3 class="mt-8 text-lg font-semibold">Invite links waiting to be used</h3>
+      <ul class="mt-2">
+        {% for invite in open_invites %}
+          <li class="ledger-row !grid-cols-[1fr_auto] py-1 text-sm">
+            <span class="text-taupe">Created {{ invite.created_at.strftime("%d %b") }}, expires {{ invite.expires_at.strftime("%d %b") }}</span>
+            {{ post_button(url_for('shops.revoke_invite', slug=shop.slug, invite_id=invite.id), "Cancel link", style="btn-link text-sm") }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

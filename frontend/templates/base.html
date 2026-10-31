@@ -45,7 +45,7 @@
         {% if current_user.is_authenticated %}
           <a href="{{ url_for('shops.dashboard') }}" class="btn-link">Dashboard</a>
           <form method="post" action="{{ url_for('auth.logout') }}">
-            {{ logout_form.hidden_tag() }}
+            {{ action_form.hidden_tag() }}
             <button type="submit" class="btn-link">Log out</button>
           </form>
         {% else %}

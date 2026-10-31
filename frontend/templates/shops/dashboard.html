@@ -9,14 +9,19 @@
 
   {% if current_user.is_owner %}
     <section class="mt-10">
-      <h2 class="font-display text-3xl font-extrabold">Your shops</h2>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="font-display text-3xl font-extrabold">Your shops</h2>
+        {% if current_user.owned_shops %}
+          <a href="{{ url_for('shops.create_shop') }}" class="btn btn-quiet">Create another shop</a>
+        {% endif %}
+      </div>
       {% if current_user.owned_shops %}
         <ul class="mt-4">
           {% for shop in current_user.owned_shops %}
             <li class="ledger-row">
               <span class="ledger-time">{{ loop.index }}</span>
               <div class="flex flex-wrap items-baseline justify-between gap-2 py-2">
-                <span class="text-lg font-semibold">{{ shop.name }}</span>
+                <a href="{{ url_for('shops.overview', slug=shop.slug) }}" class="text-lg font-semibold underline decoration-line decoration-2 underline-offset-4 hover:decoration-brass">{{ shop.name }}</a>
                 <span class="text-sm text-taupe">Booking page: /s/{{ shop.slug }}</span>
               </div>
             </li>
@@ -25,7 +30,8 @@
       {% else %}
         <div class="mt-4 max-w-xl rounded-3xl border-2 border-dashed border-mint-deep/30 bg-mint/30 p-6">
           <p class="text-lg font-semibold text-mint-deep">Your book is still empty</p>
-          <p class="mt-1 text-taupe">Soon you'll set up your shop here: its services, barbers and opening hours.</p>
+          <p class="mt-1 text-taupe">Create your shop, then add its services, barbers and working hours.</p>
+          <a href="{{ url_for('shops.create_shop') }}" class="btn btn-primary mt-4">Create your shop</a>
         </div>
       {% endif %}
     </section>
@@ -41,7 +47,10 @@
               <span class="ledger-time">{{ loop.index }}</span>
               <div class="flex flex-wrap items-baseline justify-between gap-2 py-2">
                 <span class="text-lg font-semibold">{{ m.shop.name }}</span>
-                {% if not m.active %}<span class="text-sm text-taupe">Inactive</span>{% endif %}
+                <span class="flex items-center gap-3">
+                  {% if not m.active %}<span class="text-sm text-taupe">Hidden from booking</span>{% endif %}
+                  <a href="{{ url_for('shops.edit_hours', slug=m.shop.slug, member_id=m.id) }}" class="btn-link text-sm">My working hours</a>
+                </span>
               </div>
             </li>
           {% endfor %}

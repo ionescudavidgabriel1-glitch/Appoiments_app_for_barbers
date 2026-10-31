@@ -6,7 +6,7 @@ Guidance for Claude when working in this repository.
 
 **Appoiments_app_for_barbers** is a web app where customers book appointments at a barbershop, and the shop manages its barbers, services and schedules.
 
-Status: phase 2 (accounts) and a design pass are done. Next is phase 3 (catalog). Follow the design system in `frontend/README.md` for new pages, and use the frontend-design skill for UI work.
+Status: phase 3 (catalog) is done. Next is phase 4 (booking). Follow the design system in `frontend/README.md` for new pages, and use the frontend-design skill for UI work.
 
 ## Stack (confirmed)
 
@@ -33,9 +33,9 @@ Product decisions (confirmed):
 
 1. Foundation: project structure, config, models (User, Barber, Service, Appointment, Availability), home page
 2. Accounts: sign up, login, logout, role-based access
-3. Catalog: admin manages services and barbers
+3. Catalog: owners create shops and manage services, barbers (invites) and weekly working hours
 4. Booking: pick service, barber and slot; prevent double bookings and past times
-5. Management: reschedule and cancel, daily calendar view
+5. Management: reschedule and cancel, daily calendar view, time off
 6. Notifications: confirmation and reminder emails
 7. Polish and deploy: responsive layout, validation, error pages, tests
 

@@ -11,7 +11,8 @@ backend/
     __init__.py      app factory
     config.py        Development, Testing and Production configs
     extensions.py    db, migrate, login_manager, csrf
-    forms.py         Flask-WTF forms (sign up, login, logout)
+    forms.py         Flask-WTF forms (accounts, shop, service, working hours)
+    catalog.py       shop and service rules: slugs, prices in cents, saving working hours
     decorators.py    role_required: limits a view to certain roles
     security.py      tokens for invite and booking links (stored as SHA-256 hashes)
     timeutils.py     UTC helpers and shop-timezone conversion
@@ -27,14 +28,42 @@ backend/
 | Blueprint | Prefix | Status |
 | --- | --- | --- |
 | `main` | `/` | `GET /` home page |
-| `auth` | `/auth` | `GET, POST /signup`, `GET, POST /login`, `POST /logout` |
-| `shops` | `/shops` | `GET /` dashboard (login required); management pages in phases 3 and 5 |
+| `auth` | `/auth` | `GET, POST /signup`, `GET, POST /login`, `POST /logout`, `GET, POST /invite/<token>` |
+| `shops` | `/shops` | dashboard and shop management, see below |
 | `admin` | `/admin` | empty |
 | `booking` | `/s` | empty, phase 4 (public pages at `/s/<shop-slug>`) |
 
+### Shop management (`/shops`)
+
+All pages need a login. Pages for a shop are owner-only; anyone else gets 404, so they can't tell which shops exist.
+
+| Method | Path | What it does | Who |
+| --- | --- | --- | --- |
+| GET | `/shops/` | Dashboard: your shops and the shops you work at | any user |
+| GET, POST | `/shops/new` | Create a shop | owners |
+| GET | `/shops/<slug>/` | Shop overview: services, barbers, open invites | shop owner |
+| GET, POST | `/shops/<slug>/settings` | Edit name, booking address, contact, timezone, currency, slot grid | shop owner |
+| GET, POST | `/shops/<slug>/services/new` | Add a service | shop owner |
+| GET, POST | `/shops/<slug>/services/<id>/edit` | Edit a service | shop owner |
+| POST | `/shops/<slug>/services/<id>/toggle` | Hide or show a service | shop owner |
+| POST | `/shops/<slug>/invites` | Create a barber invite link | shop owner |
+| POST | `/shops/<slug>/invites/<id>/revoke` | Cancel an unused invite | shop owner |
+| POST | `/shops/<slug>/barbers/add-me` | Add the owner as a barber | shop owner |
+| POST | `/shops/<slug>/barbers/<id>/toggle` | Hide or show a barber | shop owner |
+| GET, POST | `/shops/<slug>/barbers/<id>/hours` | Weekly working hours | shop owner, or that barber |
+
+## Catalog rules
+
+- The booking address (slug) is made from the shop name when left empty (`Frizeria Ștefan` becomes `frizeria-stefan`, then `-2`, `-3` if taken). Typed slugs must be unique, 3 to 60 characters, lowercase letters, numbers and single dashes.
+- Prices are stored as whole cents (`price_cents`) to avoid rounding errors and shown with the `money` template filter, e.g. `5000 | money("RON")` gives `50.00 RON`.
+- Service durations are multiples of 5 minutes, from 5 to 480.
+- Services and barbers are hidden, never deleted, because past appointments refer to them.
+- Working hours: each weekday has an optional first shift and an optional second shift after a break. Saving replaces all of the barber's rows.
+- Invites: the raw token is shown to the owner once, right after creation (kept in the session for one page view); only its SHA-256 hash is stored. A link works once and expires after `INVITE_EXPIRY_DAYS` (7). Opening it either creates a barber account or, if logged in, adds the shop to the current account.
+
 ## Accounts and access
 
-- Only shop owners sign up at `/auth/signup`. Barbers will join through an invite link (phase 3). Customers never have accounts.
+- Only shop owners sign up at `/auth/signup`. Barbers join through an invite link from an owner. Customers never have accounts.
 - Emails are stored in lowercase, so login is case-insensitive.
 - Passwords need at least 8 characters and are stored hashed (Werkzeug).
 - Form error messages are written as plain directions, e.g. "Use at least 8 characters."

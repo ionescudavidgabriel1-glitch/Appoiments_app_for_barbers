@@ -55,3 +55,15 @@ def make_appointment(setup, start, end, **overrides):
     )
     fields.update(overrides)
     return Appointment(**fields)
+
+
+def login(client, email="owner@example.com", password="secret-pass"):
+    return client.post("/auth/login", data={"email": email, "password": password})
+
+
+def make_user(db, email, role, name="Someone", password="secret-pass"):
+    user = User(email=email, name=name, role=role)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+    return user

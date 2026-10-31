@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "_form.html" import field, submit %}
+
+{% block title %}{{ "Shop settings" if shop else "Create your shop" }} · Barbershop Appointments{% endblock %}
+
+{% block content %}
+<div class="page-enter mx-auto max-w-xl">
+  <div>
+    {% if shop %}
+      <a href="{{ url_for('shops.overview', slug=shop.slug) }}" class="btn-link -ml-2 text-sm text-taupe">Back to {{ shop.name }}</a>
+      <h1 class="mt-2 font-display text-5xl font-extrabold">Shop settings</h1>
+    {% else %}
+      <h1 class="font-display text-5xl font-extrabold">Create your shop</h1>
+      <p class="mt-2 text-taupe">The basics customers see on your booking page. You can change them later.</p>
+    {% endif %}
+  </div>
+
+  <form method="post" class="mt-8 rounded-3xl border border-line bg-white p-6 sm:p-8" novalidate>
+    {{ form.hidden_tag() }}
+    {{ field(form.name, autocomplete="organization") }}
+    {{ field(form.slug, placeholder=shop.slug if shop else "fade-street", spellcheck="false") }}
+    {% if shop %}
+      <p class="-mt-3 mb-5 text-sm text-taupe">Changing the address breaks links you already shared.</p>
+    {% endif %}
+    {{ field(form.address, autocomplete="street-address") }}
+    {{ field(form.phone, autocomplete="tel", type="tel") }}
+    <div class="grid gap-x-4 sm:grid-cols-2">
+      {{ field(form.timezone) }}
+      {{ field(form.currency) }}
+    </div>
+    {{ field(form.slot_minutes) }}
+    {% if shop %}
+      {{ submit("Save settings", "Saving…") }}
+    {% else %}
+      {{ submit("Create shop", "Creating your shop…") }}
+    {% endif %}
+  </form>
+</div>
+{% endblock %}

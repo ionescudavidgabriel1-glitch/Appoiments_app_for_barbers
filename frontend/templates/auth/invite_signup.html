@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_form.html" import field, submit %}
+
+{% block title %}Join {{ shop.name }} · Barbershop Appointments{% endblock %}
+
+{% block content %}
+<div class="page-enter mx-auto max-w-md">
+  <div>
+    <h1 class="font-display text-5xl font-extrabold">Join {{ shop.name }}</h1>
+    <p class="mt-2 text-taupe">{{ shop.owner.name }} invited you to take bookings at {{ shop.name }}. Create your account to get started.</p>
+  </div>
+
+  <form method="post" class="mt-8 rounded-3xl border border-line bg-white p-6 sm:p-8" novalidate>
+    {{ form.hidden_tag() }}
+    {{ field(form.name, autocomplete="name") }}
+    {{ field(form.email, autocomplete="email") }}
+    {{ field(form.password, autocomplete="new-password") }}
+    {{ field(form.confirm, autocomplete="new-password") }}
+    {{ submit("Create account and join", "Joining…") }}
+  </form>
+
+  <p class="mt-6 text-center text-sm text-taupe">
+    Already have an account?
+    <a href="{{ url_for('auth.login', next=url_for('auth.accept_invite', token=token)) }}" class="font-semibold text-oxblood underline decoration-2 underline-offset-4 hover:decoration-brass">Log in to join</a>
+  </p>
+</div>
+{% endblock %}

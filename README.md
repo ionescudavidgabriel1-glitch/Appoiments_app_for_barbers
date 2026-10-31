@@ -61,4 +61,4 @@ Each build phase is released as a version (`v0.1.0` for phase 1, and so on) and 
 
 ## Status
 
-Phase 2 (accounts) is done, followed by a design pass that set the app's look and interactions (see [frontend/README.md](frontend/README.md#design)). Next is phase 3 (catalog).
+Phase 3 (catalog) is done: owners create shops, manage services, invite barbers and set working hours. Next is phase 4 (booking).

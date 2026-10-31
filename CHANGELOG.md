@@ -2,6 +2,17 @@
 
 Each build phase is released as one version. See "Versioning" in `CLAUDE.md`.
 
+## v0.3.0 - Phase 3: Catalog (2026-10-31)
+
+- Owners create shops: name, booking page address (made from the name if left empty), address, phone, timezone, currency and booking time grid; editable in shop settings.
+- Services with duration and price; hide and show instead of deleting.
+- Barber invites: single-use links that expire after 7 days, shown once and stored only as a hash; owners can cancel unused links.
+- Invited barbers create an account, or join with the account they have.
+- Owners can add themselves as a barber; barbers can be hidden and shown.
+- Weekly working hours per barber with an optional break, editable by the owner or the barber; "Copy Monday to Tuesday–Friday".
+- Shop overview page; dashboard links to shops and working hours.
+- Tests for shops, services, invites, barbers, working hours and access between shops.
+
 ## v0.2.1 - Design pass (2026-10-31)
 
 - New look, "the appointment book": warm colors (towel, walnut, oxblood, chair mint, brass), Big Shoulders Display headings and Figtree text.

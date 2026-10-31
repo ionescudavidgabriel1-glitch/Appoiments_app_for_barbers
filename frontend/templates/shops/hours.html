@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_form.html" import submit %}
+
+{% block title %}Working hours · {{ member.display_name }}{% endblock %}
+
+{% macro time_input(f) %}
+  {{ f(class="input min-w-0 !px-2.5 !py-2", aria_invalid="true" if f.errors else "false", **kwargs) }}
+  {% for error in f.errors %}
+    <p class="field-error mt-1 text-xs font-medium text-oxblood">{{ error }}</p>
+  {% endfor %}
+{% endmacro %}
+
+{% block content %}
+<div class="page-enter mx-auto max-w-4xl">
+  <div>
+    {% if is_owner %}
+      <a href="{{ url_for('shops.overview', slug=shop.slug) }}" class="btn-link -ml-2 text-sm text-taupe">Back to {{ shop.name }}</a>
+    {% else %}
+      <a href="{{ url_for('shops.dashboard') }}" class="btn-link -ml-2 text-sm text-taupe">Dashboard</a>
+    {% endif %}
+    <h1 class="mt-2 font-display text-5xl font-extrabold">{{ member.display_name }}'s hours</h1>
+    <p class="mt-2 text-taupe">The usual week at {{ shop.name }}, in {{ shop.timezone.replace("_", " ") }} time. Leave a day empty for a day off. Add a second shift for a lunch break.</p>
+  </div>
+
+  <form method="post" class="mt-8 rounded-3xl border border-line bg-white p-4 sm:p-6" novalidate data-hours-form>
+    {{ form.hidden_tag() }}
+    <div class="mb-2 flex justify-end">
+      <button type="button" class="btn-link text-sm" data-copy-monday>Copy Monday to Tuesday–Friday</button>
+    </div>
+    {% for day_name, day in days %}
+      {% set d = day.form %}
+      <fieldset class="ledger-row min-w-0 !grid-cols-1 gap-2 py-3 sm:!grid-cols-[7rem_minmax(0,1fr)]" data-day="{{ loop.index0 }}">
+        <legend class="sr-only">{{ day_name }}</legend>
+        <span class="ledger-time pt-1.5" aria-hidden="true">{{ day_name }}</span>
+        <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]">
+          <div>{{ time_input(d.start1, aria_label=day_name ~ " start") }}</div>
+          <span class="pt-2.5 text-taupe">to</span>
+          <div>{{ time_input(d.end1, aria_label=day_name ~ " end") }}</div>
+          <span class="col-span-3 pt-0 text-sm text-taupe sm:col-span-1 sm:pt-2.5">then</span>
+          <div>{{ time_input(d.start2, aria_label=day_name ~ " start after break") }}</div>
+          <span class="pt-2.5 text-taupe">to</span>
+          <div>{{ time_input(d.end2, aria_label=day_name ~ " end after break") }}</div>
+        </div>
+      </fieldset>
+    {% endfor %}
+    <div class="mt-6">{{ submit("Save working hours", "Saving…") }}</div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Invite link not valid · Barbershop Appointments{% endblock %}
+
+{% block content %}
+<div class="page-enter mx-auto max-w-md">
+  <div>
+    <h1 class="font-display text-5xl font-extrabold">This invite link doesn't work</h1>
+    <p class="mt-3 text-taupe">It has expired, was already used, or was cancelled. Ask your shop owner to send you a new one.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('main.home') }}" class="btn btn-quiet mt-8">Go to the home page</a>
+  </div>
+</div>
+{% endblock %}

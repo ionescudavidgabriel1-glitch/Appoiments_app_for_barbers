@@ -12,7 +12,12 @@ frontend/
     main/home.html       home page
     auth/signup.html     owner sign up
     auth/login.html      log in
+    auth/invite_*.html   invite link: sign up and join, join while logged in, invalid link
     shops/dashboard.html dashboard after login
+    shops/shop_form.html create a shop / shop settings
+    shops/overview.html  a shop's services, barbers and invites
+    shops/service_form.html add or edit a service
+    shops/hours.html     a barber's weekly working hours
   static/
     css/app.css      design tokens and components (buttons, inputs, ledger, animations)
     js/app.js        small interactions (see "Interactions")
@@ -28,6 +33,12 @@ Templates are grouped in folders named after their blueprint (`main/`, `auth/`, 
 | Sign up | `/auth/signup` | `auth/signup.html` |
 | Log in | `/auth/login` | `auth/login.html` |
 | Dashboard | `/shops/` | `shops/dashboard.html` |
+| Create a shop | `/shops/new` | `shops/shop_form.html` |
+| Shop settings | `/shops/<slug>/settings` | `shops/shop_form.html` |
+| Shop overview | `/shops/<slug>/` | `shops/overview.html` |
+| Add or edit a service | `/shops/<slug>/services/...` | `shops/service_form.html` |
+| Working hours | `/shops/<slug>/barbers/<id>/hours` | `shops/hours.html` |
+| Accept an invite | `/auth/invite/<token>` | `auth/invite_signup.html`, `auth/invite_join.html`, `auth/invite_invalid.html` |
 
 ## Forms
 
@@ -42,7 +53,9 @@ Build form fields with the macros in `_form.html`:
 </form>
 ```
 
-`field` shows the label, the input and any validation errors, and adds a Show/Hide button to password fields. `submit` takes the button label and the label shown while the form is sending.
+`field` shows the label, the input, a hint (the field's `description`) and any validation errors, and adds a Show/Hide button to password fields. `submit` takes the button label and the label shown while the form is sending.
+
+For actions that only need a button, like hiding a service, use `post_button(url, label, style=...)`. Import it `with context`, because it uses the `action_form` CSRF token that every page gets.
 
 Flash messages use the categories `success` (mint), `error` (oxblood) and `info` (brass). Success and info messages fade out after 6 seconds; errors stay until closed.
 
@@ -82,6 +95,8 @@ All animation stops for visitors who set "reduce motion" on their device.
 - Password fields get Show/Hide.
 - `data-greet="Name"` turns a heading into "Good morning, Name" by the visitor's local time.
 - The home page demo lets visitors book and free sample slots.
+- `data-copy="input-id"` on a button copies that input's value (the invite link).
+- On the working hours page, "Copy Monday to Tuesday–Friday" fills in the weekdays.
 
 ## Page checks
 

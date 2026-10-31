@@ -1,4 +1,6 @@
-{# Form helpers. Import with: {% from "_form.html" import field, submit %} #}
+{# Form helpers. Import with:
+     {% from "_form.html" import field, submit, post_button with context %}
+   ("with context" is needed for post_button, which uses action_form's CSRF token.) #}
 
 {% macro field(f) %}
   <div class="mb-5">
@@ -19,6 +21,9 @@
         {{ f(class="input", aria_invalid="true" if f.errors else "false", **kwargs) }}
       {% endif %}
     {% endif %}
+    {% if f.description %}
+      <p class="mt-1.5 text-sm text-taupe">{{ f.description }}</p>
+    {% endif %}
     {% for error in f.errors %}
       <p class="field-error mt-1.5 text-sm font-medium text-oxblood">{{ error }}</p>
     {% endfor %}
@@ -28,4 +33,12 @@
 {# loading is the label shown while the form is being sent, e.g. "Logging in…" #}
 {% macro submit(label, loading) %}
   <button type="submit" class="btn btn-primary w-full" data-loading-text="{{ loading }}">{{ label }}</button>
+{% endmacro %}
+
+{# A button that sends a POST, for actions like hiding a service. #}
+{% macro post_button(action, label, style="btn btn-quiet", loading=None) %}
+  <form method="post" action="{{ action }}" class="inline-block">
+    {{ action_form.hidden_tag() }}
+    <button type="submit" class="{{ style }}" {% if loading %}data-loading-text="{{ loading }}"{% endif %}>{{ label }}</button>
+  </form>
 {% endmacro %}

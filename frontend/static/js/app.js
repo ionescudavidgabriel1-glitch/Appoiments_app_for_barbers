@@ -54,3 +54,33 @@ document.querySelectorAll("[data-demo-slot]").forEach((slot) => {
       : freeLabel;
   });
 });
+
+// Copy buttons: data-copy="input-id" copies that input's value.
+document.querySelectorAll("[data-copy]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const input = document.getElementById(button.dataset.copy);
+    try {
+      await navigator.clipboard.writeText(input.value);
+    } catch {
+      input.select();
+      document.execCommand("copy");
+    }
+    const label = button.textContent;
+    button.textContent = "Copied";
+    setTimeout(() => (button.textContent = label), 2000);
+  });
+});
+
+// Working hours: copy Monday's times to Tuesday through Friday.
+document.querySelectorAll("[data-copy-monday]").forEach((button) => {
+  const form = button.closest("form");
+  button.addEventListener("click", () => {
+    const monday = [...form.querySelectorAll('[data-day="0"] input[type="time"]')];
+    for (let day = 1; day <= 4; day++) {
+      form.querySelectorAll(`[data-day="${day}"] input[type="time"]`).forEach((input, i) => {
+        input.value = monday[i].value;
+      });
+    }
+    button.textContent = "Copied to Tuesday–Friday";
+  });
+});
