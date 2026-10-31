@@ -19,6 +19,7 @@ python -m venv .venv
 # Windows (Git Bash):   source .venv/Scripts/activate
 # macOS / Linux:        source .venv/bin/activate
 pip install -r requirements-dev.txt
+python -m playwright install chromium   # browser for page checks
 cp .env.example .env      # then edit values if needed
 flask db upgrade          # creates backend/instance/barbershop.db
 ```
@@ -60,4 +61,4 @@ Each build phase is released as a version (`v0.1.0` for phase 1, and so on) and 
 
 ## Status
 
-Phase 2 (accounts) is done: owner sign up, login, logout and role-based access. Next is phase 3 (catalog).
+Phase 2 (accounts) is done, followed by a design pass that set the app's look and interactions (see [frontend/README.md](frontend/README.md#design)). Next is phase 3 (catalog).

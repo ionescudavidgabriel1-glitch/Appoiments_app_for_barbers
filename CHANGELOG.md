@@ -2,6 +2,18 @@
 
 Each build phase is released as one version. See "Versioning" in `CLAUDE.md`.
 
+## v0.2.1 - Design pass (2026-10-31)
+
+- New look, "the appointment book": warm colors (towel, walnut, oxblood, chair mint, brass), Big Shoulders Display headings and Figtree text.
+- Buttons lift on hover, squish on press, and primary buttons show barber-pole stripes.
+- Submit buttons show a spinner and a loading label; flash messages slide in and fade out.
+- Show/Hide for password fields; time-of-day greeting on the dashboard.
+- Home page with a clickable sample appointment book; logo with a turning barber pole.
+- Restyled home, sign up, login and dashboard pages; responsive down to phone width.
+- Plain, friendly form error messages.
+- All animation respects the "reduce motion" setting.
+- Playwright added to dev requirements for page checks.
+
 ## v0.2.0 - Phase 2: Accounts (2026-10-31)
 
 - Owner sign up, login with "keep me logged in", and logout.

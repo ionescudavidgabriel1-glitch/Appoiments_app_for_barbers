@@ -1,32 +1,65 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="max-w-2xl">
-  <h1 class="text-4xl font-bold tracking-tight">Online booking for your barbershop</h1>
-  <p class="mt-4 text-lg text-stone-600">
-    Customers pick a service, a barber and a free time slot from your shop's booking page.
-    No account needed to book.
-  </p>
-  <p class="mt-2 text-lg text-stone-600">
-    Owners manage services, barbers and working hours in one place.
-  </p>
-  {% if not current_user.is_authenticated %}
-    <a href="{{ url_for('auth.signup') }}" class="mt-6 inline-block rounded bg-stone-900 px-5 py-2.5 font-medium text-white hover:bg-stone-700">Create your shop account</a>
-  {% endif %}
-</section>
+<div class="page-enter grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
+  <section>
+    <h1 class="font-display text-6xl font-extrabold leading-[0.95] sm:text-7xl">Your chair, booked in a minute.</h1>
+    <p class="mt-6 max-w-md text-lg leading-relaxed text-taupe">
+      Customers pick a service, a barber and a free time on your shop's booking page.
+      No account, no phone tag. You see the whole day in one book.
+    </p>
+    {% if not current_user.is_authenticated %}
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-primary text-lg">Create your shop</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-quiet">Log in</a>
+      </div>
+    {% endif %}
+  </section>
 
-<section class="mt-12 grid gap-6 sm:grid-cols-3">
-  <div class="rounded-lg border border-stone-200 bg-white p-5">
-    <h2 class="font-semibold">1. Choose a service</h2>
-    <p class="mt-1 text-sm text-stone-600">Haircut, beard trim or both, with price and duration.</p>
-  </div>
-  <div class="rounded-lg border border-stone-200 bg-white p-5">
-    <h2 class="font-semibold">2. Pick a barber and time</h2>
-    <p class="mt-1 text-sm text-stone-600">Only free slots are shown, so nobody is double booked.</p>
-  </div>
-  <div class="rounded-lg border border-stone-200 bg-white p-5">
-    <h2 class="font-semibold">3. Get a confirmation</h2>
-    <p class="mt-1 text-sm text-stone-600">A private link lets you reschedule or cancel.</p>
-  </div>
+  <section aria-label="Example booking page" class="ledger">
+    <div class="flex items-baseline justify-between pb-3">
+      <p class="font-display text-xl font-bold">Today at Fade Street</p>
+      <p class="text-sm text-taupe">Tap a free time</p>
+    </div>
+    {% set rows = [
+      ("09:00", "Andrei · Skin fade", None),
+      ("09:30", None, 0),
+      ("10:00", "Mihai · Beard trim", None),
+      ("10:30", None, 1),
+      ("11:00", None, 2),
+      ("11:30", "Radu · Haircut", None),
+    ] %}
+    {% for time, booked, i in rows %}
+      <div class="ledger-row">
+        <span class="ledger-time">{{ time }}</span>
+        {% if booked %}
+          <span class="slot slot-booked">{{ booked }}</span>
+        {% else %}
+          <button type="button" class="slot slot-free" style="--i: {{ i }}" data-demo-slot aria-pressed="false">
+            <span>Free</span><span aria-hidden="true">+</span>
+          </button>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </section>
+</div>
+
+<section class="mt-20 max-w-3xl">
+  <h2 class="font-display text-4xl font-extrabold">How booking works</h2>
+  <ol class="mt-6">
+    {% for title, text in [
+      ("Pick a service", "Haircut, beard trim or both, with the price and how long it takes."),
+      ("Choose a barber and a free time", "Only open times are shown, so two people never get the same chair."),
+      ("Get a confirmation", "An email with a private link to change or cancel the booking."),
+    ] %}
+      <li class="ledger-row !grid-cols-[3rem_1fr] py-4">
+        <span class="ledger-time self-start text-3xl text-brass">{{ loop.index }}</span>
+        <div>
+          <h3 class="text-lg font-semibold">{{ title }}</h3>
+          <p class="mt-1 text-taupe">{{ text }}</p>
+        </div>
+      </li>
+    {% endfor %}
+  </ol>
 </section>
 {% endblock %}

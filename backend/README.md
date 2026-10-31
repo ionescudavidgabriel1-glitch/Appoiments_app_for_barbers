@@ -37,6 +37,7 @@ backend/
 - Only shop owners sign up at `/auth/signup`. Barbers will join through an invite link (phase 3). Customers never have accounts.
 - Emails are stored in lowercase, so login is case-insensitive.
 - Passwords need at least 8 characters and are stored hashed (Werkzeug).
+- Form error messages are written as plain directions, e.g. "Use at least 8 characters."
 - A failed login shows the same message for an unknown email and a wrong password.
 - After login, the `next` URL is followed only if it is a path on this site.
 - Logout is a POST with a CSRF token, so other sites can't log users out.

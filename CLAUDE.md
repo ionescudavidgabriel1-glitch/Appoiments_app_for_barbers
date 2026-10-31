@@ -6,7 +6,7 @@ Guidance for Claude when working in this repository.
 
 **Appoiments_app_for_barbers** is a web app where customers book appointments at a barbershop, and the shop manages its barbers, services and schedules.
 
-Status: phase 2 (accounts) is done. Next is phase 3 (catalog).
+Status: phase 2 (accounts) and a design pass are done. Next is phase 3 (catalog). Follow the design system in `frontend/README.md` for new pages, and use the frontend-design skill for UI work.
 
 ## Stack (confirmed)
 

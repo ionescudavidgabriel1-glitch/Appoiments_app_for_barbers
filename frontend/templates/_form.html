@@ -1,22 +1,31 @@
 {# Form helpers. Import with: {% from "_form.html" import field, submit %} #}
 
-{% macro field(f, type=None) %}
-  <div class="mb-4">
+{% macro field(f) %}
+  <div class="mb-5">
     {% if f.type == "BooleanField" %}
-      <label class="flex items-center gap-2 text-sm">
-        {{ f(class="h-4 w-4 rounded border-stone-300") }}
+      <label class="flex cursor-pointer items-center gap-2.5 text-sm">
+        {{ f(class="h-4 w-4 rounded accent-oxblood") }}
         {{ f.label.text }}
       </label>
     {% else %}
-      {{ f.label(class="mb-1 block text-sm font-medium") }}
-      {{ f(class="block w-full rounded border px-3 py-2 " ~ ("border-red-400" if f.errors else "border-stone-300"), **kwargs) }}
+      {{ f.label(class="mb-1.5 block text-sm font-semibold") }}
+      {% if f.type == "PasswordField" %}
+        <div class="relative">
+          {{ f(class="input pr-16", aria_invalid="true" if f.errors else "false", **kwargs) }}
+          <button type="button" data-toggle-password="{{ f.id }}" aria-pressed="false"
+                  class="absolute inset-y-1.5 right-1.5 rounded-lg px-3 text-sm font-medium text-taupe hover:bg-steam hover:text-walnut">Show</button>
+        </div>
+      {% else %}
+        {{ f(class="input", aria_invalid="true" if f.errors else "false", **kwargs) }}
+      {% endif %}
     {% endif %}
     {% for error in f.errors %}
-      <p class="mt-1 text-sm text-red-700">{{ error }}</p>
+      <p class="field-error mt-1.5 text-sm font-medium text-oxblood">{{ error }}</p>
     {% endfor %}
   </div>
 {% endmacro %}
 
-{% macro submit(label) %}
-  <button type="submit" class="w-full rounded bg-stone-900 px-4 py-2 font-medium text-white hover:bg-stone-700">{{ label }}</button>
+{# loading is the label shown while the form is being sent, e.g. "Logging in…" #}
+{% macro submit(label, loading) %}
+  <button type="submit" class="btn btn-primary w-full" data-loading-text="{{ loading }}">{{ label }}</button>
 {% endmacro %}

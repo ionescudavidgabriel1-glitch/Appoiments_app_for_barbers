@@ -4,40 +4,80 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Barbershop Appointments{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
   {# Development only: the Play CDN compiles Tailwind in the browser. Replace with a built stylesheet before deploying (phase 7). #}
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            towel: "#FAF6F1",
+            walnut: "#3A2A22",
+            oxblood: { DEFAULT: "#7A1F2B", dark: "#5A1520" },
+            mint: { DEFAULT: "#BFE3D5", deep: "#245746" },
+            brass: "#B7843A",
+            taupe: "#6F625A",
+            line: "#E8DFD5",
+            steam: "#F1EAE2",
+          },
+          fontFamily: {
+            display: ['"Big Shoulders Display"', "sans-serif"],
+            sans: ["Figtree", "system-ui", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
 </head>
-<body class="min-h-screen bg-stone-50 text-stone-900 flex flex-col">
-  <header class="border-b border-stone-200 bg-white">
-    <div class="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
-      <a href="{{ url_for('main.home') }}" class="text-lg font-semibold tracking-tight">Barbershop Appointments</a>
-      <nav class="flex items-center gap-4 text-sm">
+<body class="min-h-screen bg-towel font-sans text-walnut antialiased flex flex-col">
+  <header class="border-b border-line">
+    <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
+      <a href="{{ url_for('main.home') }}" class="logo flex items-center gap-2.5 rounded-lg">
+        <span class="pole" aria-hidden="true"></span>
+        <span class="font-display text-xl font-extrabold leading-none sm:text-2xl">Barbershop Appointments</span>
+      </a>
+      <nav class="flex shrink-0 items-center gap-1 whitespace-nowrap text-sm sm:gap-2">
         {% if current_user.is_authenticated %}
-          <a href="{{ url_for('shops.dashboard') }}" class="hover:underline">Dashboard</a>
+          <a href="{{ url_for('shops.dashboard') }}" class="btn-link">Dashboard</a>
           <form method="post" action="{{ url_for('auth.logout') }}">
             {{ logout_form.hidden_tag() }}
-            <button type="submit" class="hover:underline">Log out</button>
+            <button type="submit" class="btn-link">Log out</button>
           </form>
         {% else %}
-          <a href="{{ url_for('auth.login') }}" class="hover:underline">Log in</a>
-          <a href="{{ url_for('auth.signup') }}" class="rounded bg-stone-900 px-3 py-1.5 font-medium text-white hover:bg-stone-700">Sign up</a>
+          <a href="{{ url_for('auth.login') }}" class="btn-link">Log in</a>
+          <a href="{{ url_for('auth.signup') }}" class="btn btn-primary !px-4 !py-2 text-sm">Sign up</a>
         {% endif %}
       </nav>
     </div>
   </header>
 
-  <main class="flex-1 mx-auto w-full max-w-5xl px-4 py-10">
+  <main class="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:py-14">
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for category, message in messages %}
-        <div class="mb-4 rounded border px-4 py-3 text-sm {{ {'error': 'border-red-200 bg-red-50 text-red-800', 'success': 'border-emerald-200 bg-emerald-50 text-emerald-800'}.get(category, 'border-sky-200 bg-sky-50 text-sky-800') }}">{{ message }}</div>
-      {% endfor %}
+      {% if messages %}
+        <div class="mb-6 space-y-2" role="status">
+          {% for category, message in messages %}
+            {% set tone = {
+              'error': 'border-oxblood/30 bg-oxblood/5 text-oxblood',
+              'success': 'border-mint-deep/30 bg-mint/50 text-mint-deep',
+            }.get(category, 'border-brass/40 bg-brass/10 text-walnut') %}
+            <div class="flash flex items-start justify-between gap-4 rounded-2xl border px-4 py-3 text-sm font-medium {{ tone }}" {% if category != 'error' %}data-autohide{% endif %}>
+              <span>{{ message }}</span>
+              <button type="button" data-dismiss class="-my-1 rounded-md px-1.5 text-lg leading-none opacity-60 hover:opacity-100" aria-label="Close message">&times;</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
     {% endwith %}
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="border-t border-stone-200 py-6 text-center text-sm text-stone-500">
-    &copy; {{ now_year }} Barbershop Appointments
+  <footer class="border-t border-line px-4 py-8 text-center text-sm text-taupe">
+    Made for barbershops and the people who sit in their chairs. &copy; {{ now_year }}
   </footer>
 </body>
 </html>

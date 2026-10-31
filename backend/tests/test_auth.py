@@ -46,10 +46,10 @@ def test_signup_rejects_duplicate_email_case_insensitive(client, shop_setup):
 @pytest.mark.parametrize(
     ("overrides", "message"),
     [
-        ({"password": "short", "confirm": "short"}, b"between 8 and 128"),
-        ({"confirm": "different-password"}, b"Passwords must match"),
-        ({"email": "not-an-email"}, b"Invalid email"),
-        ({"name": ""}, b"This field is required"),
+        ({"password": "short", "confirm": "short"}, b"Use at least 8 characters."),
+        ({"confirm": "different-password"}, b"The two passwords don&#39;t match."),
+        ({"email": "not-an-email"}, b"Enter an email like name@example.com."),
+        ({"name": ""}, b"Enter your name."),
     ],
 )
 def test_signup_validation(client, db, overrides, message):

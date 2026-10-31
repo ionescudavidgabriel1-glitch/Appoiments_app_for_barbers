@@ -12,7 +12,7 @@ def test_testing_config(app):
 def test_home_page(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert b"Online booking for your barbershop" in response.data
+    assert b"Your chair, booked in a minute." in response.data
 
 
 def test_unknown_page_returns_404(client):

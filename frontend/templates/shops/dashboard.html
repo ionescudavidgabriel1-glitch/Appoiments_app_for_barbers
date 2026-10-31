@@ -3,33 +3,53 @@
 {% block title %}Dashboard · Barbershop Appointments{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold">Hello, {{ current_user.name }}</h1>
+<div class="page-enter">
+  {# app.js replaces this with a time-of-day greeting. #}
+  <h1 class="font-display text-5xl font-extrabold" data-greet="{{ current_user.name }}">Welcome, {{ current_user.name }}</h1>
 
-{% if current_user.is_owner %}
-  <section class="mt-6">
-    <h2 class="text-lg font-semibold">Your shops</h2>
-    {% if current_user.owned_shops %}
-      <ul class="mt-2 divide-y divide-stone-200 rounded border border-stone-200 bg-white">
-        {% for shop in current_user.owned_shops %}
-          <li class="px-4 py-3">{{ shop.name }} <span class="text-sm text-stone-500">/s/{{ shop.slug }}</span></li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="mt-2 text-stone-600">You don't have a shop yet. Shop setup is coming soon.</p>
-    {% endif %}
-  </section>
-{% endif %}
-
-<section class="mt-6">
-  <h2 class="text-lg font-semibold">Shops you work at</h2>
-  {% if current_user.memberships %}
-    <ul class="mt-2 divide-y divide-stone-200 rounded border border-stone-200 bg-white">
-      {% for m in current_user.memberships %}
-        <li class="px-4 py-3">{{ m.shop.name }}{% if not m.active %} <span class="text-sm text-stone-500">(inactive)</span>{% endif %}</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="mt-2 text-stone-600">You aren't listed as a barber at any shop.</p>
+  {% if current_user.is_owner %}
+    <section class="mt-10">
+      <h2 class="font-display text-3xl font-extrabold">Your shops</h2>
+      {% if current_user.owned_shops %}
+        <ul class="mt-4">
+          {% for shop in current_user.owned_shops %}
+            <li class="ledger-row">
+              <span class="ledger-time">{{ loop.index }}</span>
+              <div class="flex flex-wrap items-baseline justify-between gap-2 py-2">
+                <span class="text-lg font-semibold">{{ shop.name }}</span>
+                <span class="text-sm text-taupe">Booking page: /s/{{ shop.slug }}</span>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="mt-4 max-w-xl rounded-3xl border-2 border-dashed border-mint-deep/30 bg-mint/30 p-6">
+          <p class="text-lg font-semibold text-mint-deep">Your book is still empty</p>
+          <p class="mt-1 text-taupe">Soon you'll set up your shop here: its services, barbers and opening hours.</p>
+        </div>
+      {% endif %}
+    </section>
   {% endif %}
-</section>
+
+  {% if current_user.memberships or not current_user.is_owner %}
+    <section class="mt-10">
+      <h2 class="font-display text-3xl font-extrabold">Shops you work at</h2>
+      {% if current_user.memberships %}
+        <ul class="mt-4">
+          {% for m in current_user.memberships %}
+            <li class="ledger-row">
+              <span class="ledger-time">{{ loop.index }}</span>
+              <div class="flex flex-wrap items-baseline justify-between gap-2 py-2">
+                <span class="text-lg font-semibold">{{ m.shop.name }}</span>
+                {% if not m.active %}<span class="text-sm text-taupe">Inactive</span>{% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="mt-4 text-taupe">You aren't listed as a barber at any shop yet. Ask your shop owner for an invite.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+</div>
 {% endblock %}
